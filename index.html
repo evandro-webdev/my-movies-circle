@@ -11,25 +11,47 @@
 </head>
 <body class="bg-gray-50">
   <main class="max-w-7xl mx-auto">
-    <section class="p-4 lg:py-14">
-      <div class="mb-4">
-        <h1 class="mb-2 text-3xl font-bold text-blue-600">Filmes assistidos</h1>
-        <p class="text-gray-600">Boa noite, confira abaixo os filmes que vocês já assistiram:</p>
+    <section class="p-4 lg:py-14 mb-4">
+      <div class="mb-2">
+        <h1 class="text-3xl font-bold text-blue-600 mb-1">Filmes assistidos</h1>
+        <p id="greeting-text" class="text-gray-600"></p>
       </div>
-  
+
       <form id="search-form" class="relative">
-        <input id="search-input" value="" type="search" class="w-full p-3 text-gray-700 rounded-lg border border-gray-200 bg-white" placeholder="Procure por um filme">
-        <button type="submit" class="absolute right-1 top-1 cursor-pointer p-2 rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+        <input 
+          id="search-input" 
+          type="search" 
+          class="w-full p-3 pr-12 text-gray-700 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
+          placeholder="Buscar por um filme..."
+        >
+        <button 
+          type="submit" 
+          class="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-all"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
             <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
           </svg>
         </button>
       </form>
     </section>
   
-    <section class="p-4">
+    <section class="px-4">
       <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2" id="movies-list"></div>
     </section>
   </main>
+
+  <script>
+    // Saudação dinâmica conforme o horário
+    function getGreeting() {
+      const hour = new Date().getHours();
+      if (hour < 12) return "Bom dia";
+      if (hour < 18) return "Boa tarde";
+      return "Boa noite";
+    }
+
+    // Texto de saudação amigável
+    const greetingText = document.getElementById("greeting-text");
+    greetingText.textContent = `${getGreeting()}, veja abaixo os filmes que vocês já assistiram.`;
+  </script>
 </body>
 </html>

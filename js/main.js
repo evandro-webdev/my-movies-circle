@@ -114,6 +114,7 @@ searchForm.addEventListener('submit', e => {
 
   const searchTerm = searchInput.value.trim();
   if (searchTerm !== '') getMovies(searchTerm);
+  searchInput.value = "";
 });
 
 async function getMovies(searchTerm) {
@@ -303,29 +304,44 @@ function openRatingModal(movie) {
   function renderStep() {
     const reviewer = reviewers[currentReviewerIndex];
 
+    // Mapa com as cores de cada pessoa
+    const reviewerColors = {
+      evandro: 'border-blue-600',
+      tauane: 'border-red-600',
+      kauane: 'border-purple-600'
+    };
+
+    // Define a cor com base no reviewer atual
+    const borderColor = reviewerColors[reviewer] || 'border-gray-400';
+
     modalContent.innerHTML = `
-      <div class="p-4 space-y-2 rounded-lg bg-white text-center">
-        <div class="w-32 mb-4 mx-auto aspect-[2/3] rounded-lg overflow-hidden">
-          <img src="${posterPath}" alt="${movie.title}" class="w-full h-full object-cover">
-        </div>
-
-        <h2 class="text-lg font-bold text-slate-900">${movie.title}</h2>
-        <p class="text-sm text-slate-700">${capitalize(reviewer)}, que nota você dá para esse filme?</p>
-
-        <input 
-          type="number" 
-          id="rating-input" 
-          min="0" 
-          max="10" 
-          step="0.5" 
-          class="w-full border border-gray-300 rounded-lg p-2 text-center focus:ring-2 focus:ring-blue-500" 
-          placeholder="Digite uma nota de 0 a 10"
-        >
-
-        <button id="next-btn" class="mt-4 px-4 py-2 rounded-lg text-white bg-blue-600 hover:bg-blue-700">
-          Próximo →
-        </button>
+      <div class="w-36 mb-4 mx-auto aspect-[2/3] rounded-xl overflow-hidden">
+        <img src="${posterPath}" alt="${movie.title}" class="w-full h-full object-cover">
       </div>
+
+      <h2 class="text-center text-xl font-bold text-slate-900">${movie.title}</h2>
+
+       <div class="mt-8 text-center space-y-4">
+        <img 
+          src="../img/${reviewer}.jpg" 
+          class="mx-auto w-16 rounded-full border-2 ${borderColor}"
+        >
+        <p class="text-sm text-slate-600">${capitalize(reviewer)}, que nota você dá para esse filme?</p>
+      </div>
+
+      <input 
+        type="number" 
+        id="rating-input" 
+        min="0" 
+        max="10" 
+        step="0.5" 
+        class="w-full border-2 border-slate-200 rounded-xl p-3 text-center text-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
+        placeholder="0 a 10"
+      >
+
+      <button id="next-btn" class="block ml-auto mt-4 px-6 py-3 rounded-xl text-white font-medium bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 transition-all">
+        Próximo →
+      </button>
     `;
   }
 
@@ -337,35 +353,45 @@ function openRatingModal(movie) {
     );
 
     const notesList = reviewers.map(r => `
-      <div class="py-2 border-b border-gray-200 flex justify-between">
-        <span class="font-medium capitalize">${r}</span>
-        <span>${ratings[r]}</span>
+      <div class="py-3 px-2 border-b border-gray-100 flex justify-between items-center hover:bg-slate-50 transition-colors rounded-lg">
+        <span class="font-semibold capitalize text-slate-700">${r}</span>
+        <span class="text-lg font-bold text-blue-600">${ratings[r]}</span>
       </div>
     `).join('');
 
     modalContent.innerHTML = `
-      <img src="${BASE_IMAGE_URL}${movie.poster_path}" alt="${movie.title}" class="rounded-lg w-full h-64 object-cover shadow-md">
+      <img src="${BASE_IMAGE_URL}${movie.poster_path}" alt="${movie.title}" class="rounded-xl w-full object-cover">
 
-      <h2 class="text-xl font-semibold mt-2">${movie.title}</h2>
+      <h2 class="text-xl font-bold mt-4 text-slate-800">${movie.title}</h2>
 
-      <div class="text-left mt-4 space-y-1">${notesList}</div>
+      <div class="text-left mt-6 space-y-2 bg-gray-50 rounded-xl p-4">
+        ${notesList}
+        <div class="py-3 px-2 flex justify-between items-center hover:bg-slate-50 transition-colors rounded-lg">
+          <span class="font-semibold capitalize text-slate-700">Média:</span>
+          <span class="text-lg font-bold text-blue-600">${average_rating}</span>
+        </div>
+      </div>
 
-      <p class="mt-3 text-lg font-bold text-blue-600">Média: ${average_rating}</p>
 
-      <div class="flex justify-center gap-3 mt-4">
-        <button id="cancel-btn" class="bg-gray-300 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-400">
+      <div class="flex justify-center gap-4 mt-6">
+        <button id="cancel-btn" class="bg-gray-200 text-slate-700 px-6 py-3 rounded-lg font-medium transition-all">
           Cancelar
         </button>
-        <button id="save-btn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+        <button id="save-btn" class="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium">
           Salvar filme
         </button>
       </div>
     `;
 
     // Eventos dos botões
-    document.querySelector('#save-btn').addEventListener('click', () => {
-      saveMovie(movie, ratings);
-      movieModal.remove();
+    document.querySelector('#save-btn').addEventListener('click', async () => {
+      try {
+        await saveMovie(movie, ratings);
+        movieModal.remove();
+        location.reload(); // 🔁 recarrega a página
+      } catch (error) {
+        console.error("Erro ao salvar o filme:", error);
+      }
     });
 
     document.querySelector('#cancel-btn').addEventListener('click', () => {
