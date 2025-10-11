@@ -193,11 +193,23 @@ function openMovieModal(movie) {
   console.log(movie);
 
   const movieModal = document.createElement("div");
-  movieModal.className = 'fixed inset-0 w-full h-full p-6 bg-black/40 flex justify-center items-center z-50 overflow-auto';
+  movieModal.className = `
+    fixed inset-0 z-50 
+    bg-black/40 
+    flex justify-center items-center 
+    p-4 sm:p-6
+  `;
   movieModal.id = 'movie-modal';
 
   const modalContent = document.createElement("div");
-  modalContent.className = 'w-md p-4 space-y-2 rounded-lg bg-gray-200';
+  modalContent.className = `
+    relative w-full max-w-md 
+    my-8
+    bg-white rounded-xl shadow-lg 
+    p-4 space-y-3 
+    overflow-y-auto
+    max-h-[85vh]
+  `;
   modalContent.id = 'modal-content';
 
   const posterPath = movie.poster_path ? BASE_IMAGE_URL + movie.poster_path : '';
@@ -213,35 +225,51 @@ function openMovieModal(movie) {
     </div>
 
     <div>
-      <h2 class="text-lg font-bold text-slate-900">${movie.title}</h2>
+      <h2 class="mb-2 text-lg font-bold text-slate-800">${movie.title}</h2>
       <p class="text-sm text-slate-700 line-clamp-6">${movie.overview}</p>
     </div>
 
     <div class="my-4 flex flex-wrap gap-2">
-      ${movie.genres.map(g => `<span class="text-xs bg-gray-300 px-2 py-1 rounded">${g.name}</span>`).join('')}
+      ${movie.genres.map(g => `<span class="text-xs font-medium text-gray-700 bg-gray-200 px-2 py-1 rounded">${g.name}</span>`).join('')}
     </div>
-
-    <span class="text-sm text-slate-600">Nota do TMDB: ${movie.tmdb_rating}</span>
   `;
 
   // Se já assistido → mostra notas
+  const ratingList = document.createElement('div');
+
   if (isAlreadyWatched(movie.id)) {
-    const ratingList = document.createElement('div');
     ratingList.innerHTML = `
       ${Object.entries(movie.ratings).map(([user, nota]) => `
-        <div class="py-2 border-b border-gray-200 flex gap-2">
+        <div class="py-3 border-b border-gray-200 flex items-center gap-2">
           <img src="../img/${user}.jpg" class="w-6 rounded-full">
-          <span class="text-sm font-medium text-gray-700 capitalize">${user}: ${nota}</span>
+          <span class="block text-sm font-medium text-gray-700 capitalize">${user}: ${nota}</span>
         </div>
       `).join('')}
+      <div class="py-3 border-b border-gray-200 flex items-center gap-2">
+        <img src="../img/average.jpg" class="w-6 rounded-full">
+        <span class="block text-sm font-medium text-gray-700 capitalize">Nossa média: ${movie.average_rating}</span>
+      </div>
+      <div class="py-3 flex items-center gap-2">
+        <img src="../img/tmdb.jpg" class="w-6 rounded-full">
+        <span class="block text-sm font-medium text-gray-700 capitalize">Média do TMDB: ${movie.tmdb_rating}</span>
+      </div>
     `;
     modalContent.appendChild(ratingList);
+  }else{
+    ratingList.innerHTML = `
+      <div class="py-3 flex items-center gap-2">
+        <img src="../img/tmdb.jpg" class="w-6 rounded-full">
+        <span class="block text-sm font-medium text-gray-700 capitalize">Média do TMDB: ${movie.tmdb_rating}</span>
+      </div>
+    `
+    modalContent.appendChild(ratingList);
+
   }
 
   // Se ainda não assistido → botão “Marcar como assistido”
   if (!isAlreadyWatched(movie.id)) {
     const saveMovieBtn = document.createElement('button');
-    saveMovieBtn.className = 'w-full mt-6 py-2 px-3 rounded-lg text-white bg-blue-600 hover:bg-blue-700';
+    saveMovieBtn.className = 'w-full mt-2 py-2 px-3 rounded-lg text-white bg-blue-600 hover:bg-blue-700';
     saveMovieBtn.textContent = 'Marcar como assistido';
     saveMovieBtn.addEventListener('click', () => openRatingModal(movie));
     modalContent.appendChild(saveMovieBtn);
@@ -276,13 +304,13 @@ function openRatingModal(movie) {
     const reviewer = reviewers[currentReviewerIndex];
 
     modalContent.innerHTML = `
-      <div class="p-4 space-y-2 rounded-lg bg-gray-200 text-center">
+      <div class="p-4 space-y-2 rounded-lg bg-white text-center">
         <div class="w-32 mb-4 mx-auto aspect-[2/3] rounded-lg overflow-hidden">
           <img src="${posterPath}" alt="${movie.title}" class="w-full h-full object-cover">
         </div>
 
         <h2 class="text-lg font-bold text-slate-900">${movie.title}</h2>
-        <p class="text-sm text-slate-700">${capitalize(reviewer)}, que nota você dá?</p>
+        <p class="text-sm text-slate-700">${capitalize(reviewer)}, que nota você dá para esse filme?</p>
 
         <input 
           type="number" 
