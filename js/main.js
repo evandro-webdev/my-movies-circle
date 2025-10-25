@@ -141,7 +141,7 @@ function showMovies(moviesList, tab) {
 
     movieCard.innerHTML = `
       <div class="space-y-1 overflow-hidden cursor-pointer flex flex-col">
-        <div class="relative rounded-lg overflow-hidden">
+        <div class="relative w-[185px] max-w-full aspect-[185/280] rounded-lg overflow-hidden">
           <img 
             src="${posterPath}" 
             alt="${movie.title}" 
