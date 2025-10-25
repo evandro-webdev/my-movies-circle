@@ -140,20 +140,23 @@ function showMovies(moviesList, tab) {
     const posterPath = movie.poster_path ? BASE_IMAGE_URL + movie.poster_path : '';
 
     movieCard.innerHTML = `
-      <div class="w-full aspect-[2/3] space-y-2 overflow-hidden cursor-pointer flex flex-col">
-        <div class="relative w-full h-[90%] rounded-lg overflow-hidden">
+      <div class="space-y-1 overflow-hidden cursor-pointer flex flex-col">
+        <div class="relative rounded-lg overflow-hidden">
           <img 
             src="${posterPath}" 
             alt="${movie.title}" 
             class="w-full h-full object-cover transition-transform duration-500 ease-out hover:scale-110"
             onerror="this.src='../img/placeholder.jpg';"
           >
-          <span class="absolute bottom-2 right-2 py-1 px-2 rounded-md text-xs font-medium text-white bg-blue-600">
-            ${movie.release_date?.slice(0, 4) || '—'}
-          </span>
+          <div class="absolute top-2 right-2 p-[6px] rounded-md text-xs font-medium text-white bg-gradient-to-t from-[#194476] to-[#215DA2] flex items-center gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="white" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-star-icon lucide-star">
+              <path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/>
+            </svg>
+            <span class="font-medium">${movie.average_rating}</span>
+          </div>
         </div>
         <div class="h-[10%]">
-          <h3 class="text-sm font-semibold text-slate-800 line-clamp-1">${movie.title}</h3>
+          <h3 class="text-sm font-semibold text-gray-700 line-clamp-1">${movie.title}</h3>
         </div>
       </div>
     `;
