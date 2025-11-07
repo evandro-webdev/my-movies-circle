@@ -94,7 +94,7 @@
     </header>
 
     <main class="max-w-7xl mx-auto">
-      <section class="py-2 px-4 lg:py-14 mb-4 space-y-3">
+      <div class="py-2 px-4 lg:py-14 mb-2 space-y-3">
         <form id="search-form" class="relative">
           <input
             id="search-input"
@@ -151,13 +151,25 @@
 
           <span class="block text-xs text-gray-600">20 resultados</span>
         </div>
-      </section>
+      </div>
 
-      <section class="py-2 px-4">
-        <div
+      <div class="py-2 px-4">
+        <section
           class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-2 gap-y-4"
-          id="movies-list"
-        ></div>
+          id="watched-movies"
+        ></section>
+
+        <section
+          class="space-y-2"
+          id="discover"
+        ></section>
+
+        <section
+          class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-2 gap-y-4"
+          id="saved"
+        ></section>
+      </div>
+      <section class="py-2 px-4">
       </section>
     </main>
 

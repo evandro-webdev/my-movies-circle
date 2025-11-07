@@ -1,17 +1,7 @@
-/*************************************************
- * 🔥 FIREBASE INITIALIZATION
- *************************************************/
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
 
-// Importa os módulos necessários do Firebase
-import { 
-  initializeApp 
-} from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
 
-import { 
-  getFirestore, collection, addDoc, getDocs 
-} from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
-
-// Configuração do seu projeto Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyBpSXsr8ZC_BmCnaySCp42NexSrTFTzHtg",
   authDomain: "my-movie-circle.firebaseapp.com",
@@ -21,14 +11,8 @@ const firebaseConfig = {
   appId: "1:509365004119:web:cac637bcf57aaaef1c4012"
 };
 
-// Inicializa o Firebase e o Firestore
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-
-
-/*************************************************
- * 🎞️ FIRESTORE: BUSCA DE FILMES ASSISTIDOS
- *************************************************/
 
 // Obtém os filmes salvos no Firestore
 const snapshotMovies = await getDocs(collection(db, 'movies'));
@@ -92,7 +76,7 @@ const watchedMoviesInfo = await Promise.all(
  * 🧩 ELEMENTOS DO DOM
  *************************************************/
 
-const moviesListEl = document.querySelector('#movies-list');
+const moviesListEl = document.querySelector('#watched-movies');
 const searchForm = document.querySelector('#search-form');
 const searchInput = document.querySelector('#search-input');
 
@@ -149,10 +133,10 @@ function showMovies(moviesList, tab) {
             onerror="this.src='../img/placeholder.jpg';"
           >
           <div class="absolute top-2 right-2 p-[6px] rounded-md text-xs font-medium text-white bg-gradient-to-t from-[#194476] to-[#215DA2] flex items-center gap-1">
-            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="white" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-star-icon lucide-star">
+            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="white" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-star-icon lucide-star">
               <path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/>
             </svg>
-            <span class="font-medium">${movie.average_rating}</span>
+            <span class="text-[10px] font-medium">${movie.average_rating}</span>
           </div>
         </div>
         <div class="h-[10%]">
@@ -200,41 +184,50 @@ function openMovieModal(movie) {
   movieModal.className = `
     fixed inset-0 z-50 
     bg-black/40 
-    flex justify-center items-center 
-    p-4 sm:p-6
+    flex justify-center items-center
   `;
   movieModal.id = 'movie-modal';
 
   const modalContent = document.createElement("div");
   modalContent.className = `
-    relative w-full max-w-md 
-    my-8
-    bg-white rounded-xl shadow-lg 
-    p-4 space-y-3 
+    relative w-full h-full max-w-md
+    bg-white shadow-lg
     overflow-y-auto
-    max-h-[85vh]
   `;
   modalContent.id = 'modal-content';
 
   const posterPath = movie.poster_path ? BASE_IMAGE_URL + movie.poster_path : '';
 
   modalContent.innerHTML = `
-    <div class="relative w-full h-[90%] rounded-lg overflow-hidden">
+    <div class="relative w-full overflow-hidden">
       <img 
         src="${posterPath}" 
         alt="${movie.title}" 
         class="w-full h-full object-cover hover:scale-110 transition-transform duration-500 ease-out"
       >
-      <span class="absolute bottom-2 right-2 py-2 px-3 rounded-md text-white bg-blue-600">${movie.release_date}</span>
+
+      <div class="absolute bottom-0 left-0 w-full h-1/4 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
+      <div class="absolute top-0 left-0 w-full h-1/5 bg-gradient-to-b from-black to-transparent pointer-events-none"></div>
+
+      <div class="fixed top-0 left-0 w-full px-2 py-3 text-white flex justify-between">
+        <button>
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-left-icon lucide-arrow-left"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+        </button>
+        <button>
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-ellipsis-vertical-icon lucide-ellipsis-vertical"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+        </button>
+      </div>
     </div>
 
-    <div>
-      <h2 class="mb-2 text-lg font-bold text-slate-800">${movie.title}</h2>
-      <p class="text-sm text-slate-700 line-clamp-6">${movie.overview}</p>
-    </div>
+    <div class="p-2">
+      <div>
+        <h2 class="mb-2 text-3xl font-semibold text-slate-800">${movie.title}</h2>
+        <p class="text-sm text-slate-700 line-clamp-6">${movie.overview}</p>
+      </div>
 
-    <div class="my-4 flex flex-wrap gap-2">
-      ${movie.genres.map(g => `<span class="text-xs font-medium text-gray-700 bg-gray-200 px-2 py-1 rounded">${g.name}</span>`).join('')}
+      <div class="my-4 flex flex-wrap gap-2">
+        ${movie.genres.map(g => `<span class="text-xs font-medium text-gray-700 bg-gray-200 px-2 py-1 rounded">${g.name}</span>`).join('')}
+      </div>
     </div>
   `;
 
