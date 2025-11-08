@@ -6,7 +6,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyBpSXsr8ZC_BmCnaySCp42NexSrTFTzHtg",
   authDomain: "my-movie-circle.firebaseapp.com",
   projectId: "my-movie-circle",
-  storageBucket: "my-movie-circle.firebasestorage.app",
+  storageBucket: "my-movie-circle.appspot.com",
   messagingSenderId: "509365004119",
   appId: "1:509365004119:web:cac637bcf57aaaef1c4012"
 };
