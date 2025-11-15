@@ -66,7 +66,8 @@ const watchedMoviesInfo = await Promise.all(
       poster_path: dadosTMDB.poster_path,
       genres: dadosTMDB.genres,
       overview: dadosTMDB.overview,
-      release_date: dadosTMDB.release_date
+      release_date: dadosTMDB.release_date,
+      runtime: dadosTMDB.runtime
     };
   })
 );
@@ -182,23 +183,14 @@ function openMovieModal(movie) {
 
   const movieModal = document.createElement("div");
   movieModal.className = `
-    fixed inset-0 z-50 
-    bg-black/40 
-    flex justify-center items-center
+    fixed top-0 w-full h-full
+    bg-white overflow-y-auto
   `;
   movieModal.id = 'movie-modal';
 
-  const modalContent = document.createElement("div");
-  modalContent.className = `
-    relative w-full h-full max-w-md
-    bg-white shadow-lg
-    overflow-y-auto
-  `;
-  modalContent.id = 'modal-content';
-
   const posterPath = movie.poster_path ? BASE_IMAGE_URL + movie.poster_path : '';
 
-  modalContent.innerHTML = `
+  movieModal.innerHTML = `
     <div class="relative w-full overflow-hidden">
       <img 
         src="${posterPath}" 
@@ -207,10 +199,10 @@ function openMovieModal(movie) {
       >
 
       <div class="absolute bottom-0 left-0 w-full h-1/4 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
-      <div class="absolute top-0 left-0 w-full h-1/5 bg-gradient-to-b from-black to-transparent pointer-events-none"></div>
+      <div class="fixed top-0 left-0 w-full h-1/5 bg-gradient-to-b from-black to-transparent pointer-events-none"></div>
 
       <div class="fixed top-0 left-0 w-full px-2 py-3 text-white flex justify-between">
-        <button>
+        <button id="close-modal">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-left-icon lucide-arrow-left"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
         </button>
         <button>
@@ -222,17 +214,25 @@ function openMovieModal(movie) {
     <div class="p-2">
       <div>
         <h2 class="mb-2 text-3xl font-semibold text-slate-800">${movie.title}</h2>
-        <p class="text-sm text-slate-700 line-clamp-6">${movie.overview}</p>
+        <p></p>
+        <div class="text-gray-700 flex items-center gap-2">
+          <div class="my-4 flex gap-2">
+            ${movie.genres.map(g => `<span class="text-xs font-medium bg-gray-200 px-2 py-1 rounded-full">${g.name}</span>`).join('')}
+          </div>
+          <span>·</span>
+          <span>${movie.release_date.slice(0, 4)}</span>
+          <span>·</span>
+          <span>${formatRuntime(movie.runtime)}</span>
+        </div>
       </div>
-
-      <div class="my-4 flex flex-wrap gap-2">
-        ${movie.genres.map(g => `<span class="text-xs font-medium text-gray-700 bg-gray-200 px-2 py-1 rounded">${g.name}</span>`).join('')}
-      </div>
+        
+        <p class="text-[16px] text-gray-400 font-light line-clamp-6">${movie.overview}</p>
     </div>
   `;
 
   // Se já assistido → mostra notas
   const ratingList = document.createElement('div');
+  ratingList.className = 'p-2'
 
   if (isAlreadyWatched(movie.id)) {
     ratingList.innerHTML = `
@@ -251,7 +251,7 @@ function openMovieModal(movie) {
         <span class="block text-sm font-medium text-gray-700 capitalize">Média do TMDB: ${movie.tmdb_rating}</span>
       </div>
     `;
-    modalContent.appendChild(ratingList);
+    movieModal.appendChild(ratingList);
   }else{
     ratingList.innerHTML = `
       <div class="py-3 flex items-center gap-2">
@@ -259,7 +259,7 @@ function openMovieModal(movie) {
         <span class="block text-sm font-medium text-gray-700 capitalize">Média do TMDB: ${movie.tmdb_rating}</span>
       </div>
     `
-    modalContent.appendChild(ratingList);
+    movieModal.appendChild(ratingList);
 
   }
 
@@ -269,15 +269,13 @@ function openMovieModal(movie) {
     saveMovieBtn.className = 'w-full mt-2 py-2 px-3 rounded-lg text-white bg-blue-600 hover:bg-blue-700';
     saveMovieBtn.textContent = 'Marcar como assistido';
     saveMovieBtn.addEventListener('click', () => openRatingModal(movie));
-    modalContent.appendChild(saveMovieBtn);
+    movieModal.appendChild(saveMovieBtn);
   }
 
-  movieModal.appendChild(modalContent);
-
   // Fecha o modal ao clicar no fundo
-  movieModal.addEventListener('click', (e) => {
-    if (e.target === movieModal) movieModal.remove();
-  });
+  movieModal.querySelector('#close-modal').addEventListener('click', (e) => {
+    movieModal.remove();
+  })
 
   document.body.appendChild(movieModal);
 }
@@ -293,7 +291,6 @@ function openRatingModal(movie) {
   let currentReviewerIndex = 0;
 
   const movieModal = document.querySelector('#movie-modal');
-  const modalContent = document.querySelector('#modal-content');
   const posterPath = movie.poster_path ? BASE_IMAGE_URL + movie.poster_path : '';
 
   // Etapa individual de nota
@@ -310,7 +307,7 @@ function openRatingModal(movie) {
     // Define a cor com base no reviewer atual
     const borderColor = reviewerColors[reviewer] || 'border-gray-400';
 
-    modalContent.innerHTML = `
+    movieModal.innerHTML = `
       <div class="w-36 mb-4 mx-auto aspect-[2/3] rounded-xl overflow-hidden">
         <img src="${posterPath}" alt="${movie.title}" class="w-full h-full object-cover">
       </div>
@@ -355,7 +352,7 @@ function openRatingModal(movie) {
       </div>
     `).join('');
 
-    modalContent.innerHTML = `
+    movieModal.innerHTML = `
       <img src="${BASE_IMAGE_URL}${movie.poster_path}" alt="${movie.title}" class="rounded-xl w-full object-cover">
 
       <h2 class="text-xl font-bold mt-4 text-slate-800">${movie.title}</h2>
@@ -399,7 +396,7 @@ function openRatingModal(movie) {
   renderStep();
 
   // Evento "Próximo"
-  modalContent.addEventListener('click', e => {
+  movieModal.addEventListener('click', e => {
     if (e.target.id === 'next-btn') {
       const input = document.querySelector("#rating-input");
       const value = parseFloat(input.value);
@@ -458,4 +455,13 @@ async function saveMovie(movie, ratings) {
   });
 
   alert(`🎬 O filme "${movie.title}" foi salvo com média: ${average_rating}!`);
+}
+
+function formatRuntime(minutes) {
+  if (!minutes) return "—";
+  
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  
+  return `${h}h ${m}m`;
 }
