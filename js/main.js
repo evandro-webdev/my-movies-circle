@@ -66,6 +66,7 @@ const watchedMoviesInfo = await Promise.all(
       poster_path: dadosTMDB.poster_path,
       genres: dadosTMDB.genres,
       overview: dadosTMDB.overview,
+      tagline: dadosTMDB.tagline,
       release_date: dadosTMDB.release_date,
       runtime: dadosTMDB.runtime
     };
@@ -214,10 +215,10 @@ function openMovieModal(movie) {
     <div class="p-2">
       <div>
         <h2 class="mb-2 text-3xl font-semibold text-slate-800">${movie.title}</h2>
-        <p></p>
-        <div class="text-gray-700 flex items-center gap-2">
+        <p class="text-[14px] font-light text-[#8C8C8C]">${movie.tagline}</p>
+        <div class="text-xs text-[#5E5E5E] flex items-center gap-2">
           <div class="my-4 flex gap-2">
-            ${movie.genres.map(g => `<span class="text-xs font-medium bg-gray-200 px-2 py-1 rounded-full">${g.name}</span>`).join('')}
+            ${movie.genres.map(g => `<span class="px-2 py-[2px] rounded-full font-medium bg-[#EDEDED]">${g.name}</span>`).join('')}
           </div>
           <span>·</span>
           <span>${movie.release_date.slice(0, 4)}</span>
@@ -226,29 +227,28 @@ function openMovieModal(movie) {
         </div>
       </div>
         
-        <p class="text-[16px] text-gray-400 font-light line-clamp-6">${movie.overview}</p>
+      <p class="text-[16px] text-gray-400 font-light line-clamp-6">${movie.overview}</p>
     </div>
   `;
 
-  // Se já assistido → mostra notas
   const ratingList = document.createElement('div');
-  ratingList.className = 'p-2'
+  ratingList.className = 'p-2 flex items-center gap-2'
 
   if (isAlreadyWatched(movie.id)) {
     ratingList.innerHTML = `
       ${Object.entries(movie.ratings).map(([user, nota]) => `
-        <div class="py-3 border-b border-gray-200 flex items-center gap-2">
+        <div class="pr-2 rounded-full text-white bg-black flex items-center gap-2">
           <img src="../img/${user}.jpg" class="w-6 rounded-full">
-          <span class="block text-sm font-medium text-gray-700 capitalize">${user}: ${nota}</span>
+          <span class="block text-sm font-medium">${nota}</span>
         </div>
       `).join('')}
-      <div class="py-3 border-b border-gray-200 flex items-center gap-2">
+      <div class="pr-2 rounded-full text-white bg-black flex items-center gap-2">
         <img src="../img/average.jpg" class="w-6 rounded-full">
-        <span class="block text-sm font-medium text-gray-700 capitalize">Nossa média: ${movie.average_rating}</span>
+        <span class="block text-sm font-medium">${movie.average_rating}</span>
       </div>
-      <div class="py-3 flex items-center gap-2">
+      <div class="pr-2 rounded-full text-white bg-black flex items-center gap-2">
         <img src="../img/tmdb.jpg" class="w-6 rounded-full">
-        <span class="block text-sm font-medium text-gray-700 capitalize">Média do TMDB: ${movie.tmdb_rating}</span>
+        <span class="block text-sm font-medium">${movie.tmdb_rating}</span>
       </div>
     `;
     movieModal.appendChild(ratingList);
@@ -256,7 +256,7 @@ function openMovieModal(movie) {
     ratingList.innerHTML = `
       <div class="py-3 flex items-center gap-2">
         <img src="../img/tmdb.jpg" class="w-6 rounded-full">
-        <span class="block text-sm font-medium text-gray-700 capitalize">Média do TMDB: ${movie.tmdb_rating}</span>
+        <span class="block text-sm font-medium text-gray-700 capitalize">${movie.tmdb_rating}</span>
       </div>
     `
     movieModal.appendChild(ratingList);
