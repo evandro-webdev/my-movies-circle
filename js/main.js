@@ -184,7 +184,7 @@ function openMovieModal(movie) {
   // console.log(movie);
 
   const movieModal = createModalWrapper();
-  const movieHeader = createMovieHeader()
+  const movieHeader = createMovieHeader(movie)
 
   const posterPath = movie.poster_path ? BASE_IMAGE_URL + movie.poster_path : '';
 
@@ -283,7 +283,7 @@ function openMovieModal(movie) {
   document.body.appendChild(movieModal);
 }
 
-function createModalWrapper(movie){
+function createModalWrapper(){
   const movieModal = document.createElement("div");
   movieModal.className = "fixed top-0 w-full h-full bg-white overflow-y-auto";
   movieModal.id = "movie-modal";
@@ -292,7 +292,7 @@ function createModalWrapper(movie){
 }
 
 
-function createMovieHeader(){
+function createMovieHeader(movie){
   const posterPath = movie.poster_path ? BASE_IMAGE_URL + movie.poster_path : '';
 
   const div = document.createElement("div");
