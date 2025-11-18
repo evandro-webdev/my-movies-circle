@@ -179,15 +179,12 @@ async function getMovie(movieId) {
  *************************************************/
 
 function openMovieModal(movie) {
+  document.body.style.overflow = 'hidden';
   movie.tmdb_rating = movie.vote_average ? movie.vote_average : movie.tmdb_rating;
-  console.log(movie);
+  // console.log(movie);
 
-  const movieModal = document.createElement("div");
-  movieModal.className = `
-    fixed top-0 w-full h-full
-    bg-white overflow-y-auto
-  `;
-  movieModal.id = 'movie-modal';
+  const movieModal = createModalWrapper();
+  const movieHeader = createMovieHeader()
 
   const posterPath = movie.poster_path ? BASE_IMAGE_URL + movie.poster_path : '';
 
@@ -212,12 +209,12 @@ function openMovieModal(movie) {
       </div>
     </div>
 
-    <div class="p-2">
+    <div class="p-2" id="movie-info">
       <div>
-        <h2 class="mb-2 text-3xl font-semibold text-slate-800">${movie.title}</h2>
+        <h2 class="text-3xl font-semibold text-slate-800">${movie.title}</h2>
         <p class="text-[14px] font-light text-[#8C8C8C]">${movie.tagline}</p>
-        <div class="text-xs text-[#5E5E5E] flex items-center gap-2">
-          <div class="my-4 flex gap-2">
+        <div class="mt-2 mb-4 text-xs text-[#5E5E5E] flex items-center gap-2">
+          <div class="flex gap-2">
             ${movie.genres.map(g => `<span class="px-2 py-[2px] rounded-full font-medium bg-[#EDEDED]">${g.name}</span>`).join('')}
           </div>
           <span>·</span>
@@ -227,40 +224,45 @@ function openMovieModal(movie) {
         </div>
       </div>
         
-      <p class="text-[16px] text-gray-400 font-light line-clamp-6">${movie.overview}</p>
+      <p class="text-[16px] text-[#8C8C8C] font-light leading-[20px] line-clamp-6">${movie.overview}</p>
     </div>
   `;
 
   const ratingList = document.createElement('div');
-  ratingList.className = 'p-2 flex items-center gap-2'
+  ratingList.className = 'mt-4 mb-8 flex items-center gap-2'
 
   if (isAlreadyWatched(movie.id)) {
+    const reviewerColors = {
+      evandro: 'bg-[#338CD5]',
+      tauane: 'bg-[#BF4345]',
+      kauane: 'bg-[#6941BA]'
+    };
+
     ratingList.innerHTML = `
       ${Object.entries(movie.ratings).map(([user, nota]) => `
-        <div class="pr-2 rounded-full text-white bg-black flex items-center gap-2">
+        <div class="pr-2 rounded-full text-white ${reviewerColors[user]} flex items-center gap-2">
           <img src="../img/${user}.jpg" class="w-6 rounded-full">
-          <span class="block text-sm font-medium">${nota}</span>
+          <span class="block text-sm font-bold">${nota}</span>
         </div>
       `).join('')}
-      <div class="pr-2 rounded-full text-white bg-black flex items-center gap-2">
+      <div class="pr-2 rounded-full text-white bg-[#3A5A7E] flex items-center gap-2">
         <img src="../img/average.jpg" class="w-6 rounded-full">
-        <span class="block text-sm font-medium">${movie.average_rating}</span>
+        <span class="block text-sm font-bold">${movie.average_rating}</span>
       </div>
-      <div class="pr-2 rounded-full text-white bg-black flex items-center gap-2">
+      <div class="pr-2 rounded-full text-white bg-[#4EBBC5] flex items-center gap-2">
         <img src="../img/tmdb.jpg" class="w-6 rounded-full">
-        <span class="block text-sm font-medium">${movie.tmdb_rating}</span>
+        <span class="block text-sm font-bold">${movie.tmdb_rating.toFixed(1)}</span>
       </div>
     `;
-    movieModal.appendChild(ratingList);
+    movieModal.querySelector('#movie-info').appendChild(ratingList);
   }else{
     ratingList.innerHTML = `
-      <div class="py-3 flex items-center gap-2">
+      <div class="pr-2 rounded-full text-white bg-[#4EBBC5] flex items-center gap-2">
         <img src="../img/tmdb.jpg" class="w-6 rounded-full">
-        <span class="block text-sm font-medium text-gray-700 capitalize">${movie.tmdb_rating}</span>
+        <span class="block text-sm font-bold text-gray-700 capitalize">${movie.tmdb_rating.toFixed(1)}</span>
       </div>
     `
-    movieModal.appendChild(ratingList);
-
+    movieModal.querySelector('#movie-info').appendChild(ratingList);
   }
 
   // Se ainda não assistido → botão “Marcar como assistido”
@@ -275,9 +277,48 @@ function openMovieModal(movie) {
   // Fecha o modal ao clicar no fundo
   movieModal.querySelector('#close-modal').addEventListener('click', (e) => {
     movieModal.remove();
+    document.body.style.overflow = 'auto';
   })
 
   document.body.appendChild(movieModal);
+}
+
+function createModalWrapper(movie){
+  const movieModal = document.createElement("div");
+  movieModal.className = "fixed top-0 w-full h-full bg-white overflow-y-auto";
+  movieModal.id = "movie-modal";
+
+  return movieModal;
+}
+
+
+function createMovieHeader(){
+  const posterPath = movie.poster_path ? BASE_IMAGE_URL + movie.poster_path : '';
+
+  const div = document.createElement("div");
+  div.className = "relative w-full overflow-hidden";
+
+  div.innerHTML = `
+    <img 
+      src="${posterPath}" 
+      alt="${movie.title}" 
+      class="w-full h-full object-cover hover:scale-110 transition-transform duration-500 ease-out"
+    >
+
+    <div class="absolute bottom-0 left-0 w-full h-1/4 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
+    <div class="fixed top-0 left-0 w-full h-1/5 bg-gradient-to-b from-black to-transparent pointer-events-none"></div>
+
+    <div class="fixed top-0 left-0 w-full px-2 py-3 text-white flex justify-between">
+      <button id="close-modal">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-left-icon lucide-arrow-left"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+      </button>
+      <button>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-ellipsis-vertical-icon lucide-ellipsis-vertical"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+      </button>
+    </div>
+  `
+  
+  return div;
 }
 
 
@@ -428,6 +469,14 @@ function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
+function formatRuntime(minutes) {
+  if (!minutes) return "—";
+  
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  
+  return `${h}h ${m}m`;
+}
 
 /*************************************************
  * 💾 SALVAR FILME NO FIRESTORE
@@ -457,11 +506,3 @@ async function saveMovie(movie, ratings) {
   alert(`🎬 O filme "${movie.title}" foi salvo com média: ${average_rating}!`);
 }
 
-function formatRuntime(minutes) {
-  if (!minutes) return "—";
-  
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  
-  return `${h}h ${m}m`;
-}
