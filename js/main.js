@@ -58,20 +58,22 @@ async function getSingleMovie(movieId) {
  * 🎬 COMPLETA OS DADOS DOS FILMES JÁ ASSISTIDOS
  *************************************************/
 
-const watchedMoviesInfo = await Promise.all(
-  watchedMovies.map(async movie => {
-    const dadosTMDB = await getSingleMovie(movie.id);
-    return { 
-      ...movie,
-      poster_path: dadosTMDB.poster_path,
-      genres: dadosTMDB.genres,
-      overview: dadosTMDB.overview,
-      tagline: dadosTMDB.tagline,
-      release_date: dadosTMDB.release_date,
-      runtime: dadosTMDB.runtime
-    };
-  })
-);
+async function loadWatchedMoviesInfo(){ 
+  return await Promise.all(
+    watchedMovies.map(async movie => {
+      const dadosTMDB = await getSingleMovie(movie.id);
+      return { 
+        ...movie,
+        poster_path: dadosTMDB.poster_path,
+        genres: dadosTMDB.genres,
+        overview: dadosTMDB.overview,
+        tagline: dadosTMDB.tagline,
+        release_date: dadosTMDB.release_date,
+        runtime: dadosTMDB.runtime
+      };
+    })
+  )
+};
 
 
 /*************************************************
@@ -87,7 +89,20 @@ const searchInput = document.querySelector('#search-input');
  * 🚀 EXIBIÇÃO INICIAL DOS FILMES ASSISTIDOS
  *************************************************/
 
-document.addEventListener('DOMContentLoaded', showMovies(watchedMoviesInfo, 'watchedList'));
+async function initApp() {
+  const watchedMoviesInfo = await loadWatchedMoviesInfo();
+
+  showMovies(watchedMoviesInfo, 'watchedList');
+
+  const splash = document.querySelector('#splash-screen');
+  splash.classList.add("opacity-0");
+
+  setTimeout(() => {
+    splash.style.display = "none";
+  }, 700)
+}
+
+document.addEventListener('DOMContentLoaded', await initApp());
 
 
 /*************************************************
