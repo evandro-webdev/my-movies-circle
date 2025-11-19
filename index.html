@@ -3,7 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Movies Circle</title>
+
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#0088FF">
+    <link rel="icon" type="image/png" href="/img/icons/favicon.ico" />
+
+    <link rel="apple-touch-icon" href="/img/icons/apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="CineTrack">
+
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -15,14 +24,15 @@
       rel="stylesheet"
       href="https://unicons.iconscout.com/release/v4.2.0/css/line.css"
     />
+
     <script src="./js/app.js" type="module"></script>
     <script src="./js/main.js" type="module"></script>
-    <link rel="icon" type="image/png" href="/favicon.ico" />
     <style>
       html {
         font-family: "DM Sans", "Inter", sans-serif;
       }
     </style>
+    <title>My Movies Circle</title>
   </head>
   <body>
     <div id="splash-screen" class="fixed z-[9999] inset-0 bg-[#0088FF] transition-opacity duration-700 flex justify-center items-center">
