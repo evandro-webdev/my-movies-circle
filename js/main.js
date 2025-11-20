@@ -84,6 +84,12 @@ const moviesListEl = document.querySelector('#watched-movies');
 const searchForm = document.querySelector('#search-form');
 const searchInput = document.querySelector('#search-input');
 
+const reviewerColors = {
+  evandro: 'bg-[#338CD5]',
+  tauane: 'bg-[#BF4345]',
+  kauane: 'bg-[#6941BA]'
+};
+
 
 /*************************************************
  * 🚀 EXIBIÇÃO INICIAL DOS FILMES ASSISTIDOS
@@ -188,7 +194,6 @@ async function getMovie(movieId) {
   }
 }
 
-
 /*************************************************
  * 🎞️ MODAL DE DETALHES DO FILME
  *************************************************/
@@ -196,100 +201,11 @@ async function getMovie(movieId) {
 function openMovieModal(movie) {
   document.body.style.overflow = 'hidden';
   movie.tmdb_rating = movie.vote_average ? movie.vote_average : movie.tmdb_rating;
-  // console.log(movie);
 
   const movieModal = createModalWrapper();
-  const movieHeader = createMovieHeader(movie)
-
-  const posterPath = movie.poster_path ? BASE_IMAGE_URL + movie.poster_path : '';
-
-  movieModal.innerHTML = `
-    <div class="relative w-full overflow-hidden">
-      <img 
-        src="${posterPath}" 
-        alt="${movie.title}" 
-        class="w-full h-full object-cover hover:scale-110 transition-transform duration-500 ease-out"
-      >
-
-      <div class="absolute bottom-0 left-0 w-full h-1/4 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
-      <div class="fixed top-0 left-0 w-full h-1/5 bg-gradient-to-b from-black to-transparent pointer-events-none"></div>
-
-      <div class="fixed top-0 left-0 w-full px-2 py-3 text-white flex justify-between">
-        <button id="close-modal">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-left-icon lucide-arrow-left"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
-        </button>
-        <button>
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-ellipsis-vertical-icon lucide-ellipsis-vertical"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
-        </button>
-      </div>
-    </div>
-
-    <div class="p-2" id="movie-info">
-      <div>
-        <h2 class="text-3xl font-semibold text-slate-800">${movie.title}</h2>
-        <p class="text-[14px] font-light text-[#8C8C8C]">${movie.tagline}</p>
-        <div class="mt-2 mb-4 text-xs text-[#5E5E5E] flex items-center gap-2">
-          <div class="flex gap-2">
-            ${movie.genres.map(g => `<span class="px-2 py-[2px] rounded-full font-medium bg-[#EDEDED]">${g.name}</span>`).join('')}
-          </div>
-          <span>·</span>
-          <span>${movie.release_date.slice(0, 4)}</span>
-          <span>·</span>
-          <span>${formatRuntime(movie.runtime)}</span>
-        </div>
-      </div>
-        
-      <p class="text-[16px] text-[#8C8C8C] font-light leading-[20px] line-clamp-6">${movie.overview}</p>
-    </div>
-  `;
-
-  const ratingList = document.createElement('div');
-  ratingList.className = 'mt-4 mb-8 flex items-center gap-2'
-
-  if (isAlreadyWatched(movie.id)) {
-    const reviewerColors = {
-      evandro: 'bg-[#338CD5]',
-      tauane: 'bg-[#BF4345]',
-      kauane: 'bg-[#6941BA]'
-    };
-
-    ratingList.innerHTML = `
-      ${Object.entries(movie.ratings).map(([user, nota]) => `
-        <div class="pr-2 rounded-full text-white ${reviewerColors[user]} flex items-center gap-2">
-          <img src="../img/${user}.jpg" class="w-6 rounded-full">
-          <span class="block text-sm font-bold">${nota}</span>
-        </div>
-      `).join('')}
-      <div class="pr-2 rounded-full text-white bg-[#3A5A7E] flex items-center gap-2">
-        <img src="../img/average.jpg" class="w-6 rounded-full">
-        <span class="block text-sm font-bold">${movie.average_rating}</span>
-      </div>
-      <div class="pr-2 rounded-full text-white bg-[#4EBBC5] flex items-center gap-2">
-        <img src="../img/tmdb.jpg" class="w-6 rounded-full">
-        <span class="block text-sm font-bold">${movie.tmdb_rating.toFixed(1)}</span>
-      </div>
-    `;
-    movieModal.querySelector('#movie-info').appendChild(ratingList);
-  }else{
-    ratingList.innerHTML = `
-      <div class="pr-2 rounded-full text-white bg-[#4EBBC5] flex items-center gap-2">
-        <img src="../img/tmdb.jpg" class="w-6 rounded-full">
-        <span class="block text-sm font-bold text-gray-700 capitalize">${movie.tmdb_rating.toFixed(1)}</span>
-      </div>
-    `
-    movieModal.querySelector('#movie-info').appendChild(ratingList);
-  }
-
-  // Se ainda não assistido → botão “Marcar como assistido”
-  if (!isAlreadyWatched(movie.id)) {
-    const saveMovieBtn = document.createElement('button');
-    saveMovieBtn.className = 'w-full mt-2 py-2 px-3 rounded-lg text-white bg-blue-600 hover:bg-blue-700';
-    saveMovieBtn.textContent = 'Marcar como assistido';
-    saveMovieBtn.addEventListener('click', () => openRatingModal(movie));
-    movieModal.appendChild(saveMovieBtn);
-  }
-
-  // Fecha o modal ao clicar no fundo
+  movieModal.appendChild(createMovieHeader(movie));
+  movieModal.appendChild(createMovieInfo(movie));
+  
   movieModal.querySelector('#close-modal').addEventListener('click', (e) => {
     movieModal.remove();
     document.body.style.overflow = 'auto';
@@ -305,7 +221,6 @@ function createModalWrapper(){
 
   return movieModal;
 }
-
 
 function createMovieHeader(movie){
   const posterPath = movie.poster_path ? BASE_IMAGE_URL + movie.poster_path : '';
@@ -336,6 +251,93 @@ function createMovieHeader(movie){
   return div;
 }
 
+function createMovieInfo(movie){
+  const div = document.createElement("div");
+  div.className = 'pt-2 pb-4 px-4';
+  div.id = 'movie-info';
+
+  div.innerHTML = `
+    <div>
+      <h2 class="text-3xl font-semibold text-slate-800">${movie.title}</h2>
+      <p class="text-[14px] font-light text-[#8C8C8C]">${movie.tagline}</p>
+
+      <div class="mt-2 mb-4 text-xs text-[#5E5E5E] flex items-center gap-2">
+        <div class="flex gap-2">
+          ${movie.genres.map(g => `<span class="px-2 py-[2px] rounded-full font-medium bg-[#EDEDED]">${g.name}</span>`).join('')}
+        </div>
+        <span>·</span>
+        <span>${movie.release_date.slice(0, 4)}</span>
+        <span>·</span>
+        <span>${formatRuntime(movie.runtime)}</span>
+      </div>
+
+      <p class="text-[16px] text-[#8C8C8C] font-light leading-[20px] line-clamp-6">${movie.overview}</p>
+    </div>
+  `
+  div.appendChild(createMovieRatingList(movie));
+  div.appendChild(createMovieActionButtons(movie));
+
+  return div;
+}
+
+function createMovieRatingList(movie){
+  const div = document.createElement('div');
+  div.className = 'mt-4 flex items-center gap-2'
+
+  if (isAlreadyWatched(movie.id)) {
+    div.innerHTML = `
+      ${Object.entries(movie.ratings).map(([user, nota]) => `
+        <div class="pr-2 rounded-full text-white ${reviewerColors[user]} flex items-center gap-2">
+          <img src="../img/${user}.jpg" class="w-6 rounded-full">
+          <span class="block text-sm font-bold">${nota}</span>
+        </div>
+      `).join('')}
+
+      <div class="pr-2 rounded-full text-white bg-[#3A5A7E] flex items-center gap-2">
+        <img src="../img/average.jpg" class="w-6 rounded-full">
+        <span class="block text-sm font-bold">${movie.average_rating}</span>
+      </div>
+      <div class="pr-2 rounded-full text-white bg-[#4EBBC5] flex items-center gap-2">
+        <img src="../img/tmdb.jpg" class="w-6 rounded-full">
+        <span class="block text-sm font-bold">${movie.tmdb_rating.toFixed(1)}</span>
+      </div>
+    `;
+  }else{
+    div.innerHTML = `
+      <div class="pr-2 rounded-full text-white bg-[#4EBBC5] flex items-center gap-2">
+        <img src="../img/tmdb.jpg" class="w-6 rounded-full">
+        <span class="block text-sm font-bold">${movie.tmdb_rating.toFixed(1)}</span>
+      </div>
+    `
+  }
+
+  return div;
+}
+
+function createMovieActionButtons(movie){
+  if (!isAlreadyWatched(movie.id)) {
+    const div = document.createElement('div');
+    div.className = 'mt-6 flex items-center gap-4'
+
+    div.innerHTML = `
+      <button class="py-2 px-3 rounded-lg hover:bg-gray-100 flex justify-center items-center gap-2">
+        <svg class="w-4 h-4 text-gray-500" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke="currentColor">
+          <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/>
+        </svg>
+        <span class="text-gray-500 font-medium">Salvar</span>
+      </button>
+      <button onclick="openRatingModal(movie)" class="w-full py-2 px-3 rounded-lg text-white bg-[#0088FF] hover:bg-blue-600 flex justify-center items-center gap-2">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke="currentColor">
+          <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+        <span class="font-medium">Marcar como assistido</span>
+      </button>
+    `
+    
+    return div;
+  }
+}
 
 /*************************************************
  * ⭐ MODAL DE AVALIAÇÃO DO FILME
@@ -352,13 +354,6 @@ function openRatingModal(movie) {
   // Etapa individual de nota
   function renderStep() {
     const reviewer = reviewers[currentReviewerIndex];
-
-    // Mapa com as cores de cada pessoa
-    const reviewerColors = {
-      evandro: 'border-blue-600',
-      tauane: 'border-red-600',
-      kauane: 'border-purple-600'
-    };
 
     // Define a cor com base no reviewer atual
     const borderColor = reviewerColors[reviewer] || 'border-gray-400';
