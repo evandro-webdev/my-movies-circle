@@ -1,7 +1,9 @@
 {
-  "name": "CineTrack - Seus Filmes Assistidos",
+  "name": " ",
   "short_name": "CineTrack",
   "description": "Acompanhe filmes assistidos, descubra novos títulos, salve favoritos e organize tudo com estilo.",
+  "theme_color": "#0A84FF",
+  "background_color": "#0A84FF",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
