@@ -17,6 +17,7 @@ const db = getFirestore(app);
 // Obtém os filmes salvos no Firestore
 const snapshotMovies = await getDocs(collection(db, 'movies'));
 const watchedMovies = snapshotMovies.docs.map(doc => doc.data());
+watchedMovies.sort((a, b) => b.average_rating - a.average_rating);
 const watchedMoviesIds = watchedMovies.map(movie => movie.id);
 
 
@@ -315,10 +316,10 @@ function createMovieRatingList(movie){
 }
 
 function createMovieActionButtons(movie){
-  if (!isAlreadyWatched(movie.id)) {
-    const div = document.createElement('div');
-    div.className = 'mt-6 flex items-center gap-4'
+  const div = document.createElement('div');
+  div.className = 'mt-6 flex items-center gap-4';
 
+  if (!isAlreadyWatched(movie.id)) {
     div.innerHTML = `
       <button class="py-2 px-3 rounded-lg hover:bg-gray-100 flex justify-center items-center gap-2">
         <svg class="w-4 h-4 text-gray-500" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke="currentColor">
@@ -326,7 +327,7 @@ function createMovieActionButtons(movie){
         </svg>
         <span class="text-gray-500 font-medium">Salvar</span>
       </button>
-      <button onclick="openRatingModal(movie)" class="w-full py-2 px-3 rounded-lg text-white bg-[#0088FF] hover:bg-blue-600 flex justify-center items-center gap-2">
+      <button id="rate-movie-btn" class="w-full py-2 px-3 rounded-lg text-white bg-[#0088FF] hover:bg-blue-600 flex justify-center items-center gap-2">
         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke="currentColor">
           <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/>
           <circle cx="12" cy="12" r="3"/>
@@ -335,8 +336,26 @@ function createMovieActionButtons(movie){
       </button>
     `
     
-    return div;
+    div.querySelector('#rate-movie-btn').addEventListener('click', openRatingModal(movie));
+  } else {
+    div.innerHTML = `
+      <button class="py-2 px-3 rounded-lg hover:bg-gray-100 flex justify-center items-center gap-2">
+        <svg class="w-4 h-4 text-gray-500" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke="currentColor">
+          <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/>
+        </svg>
+        <span class="text-gray-500 font-medium">Remover</span>
+      </button>
+      <button id="rate-movie-btn" class="w-full py-2 px-3 rounded-lg text-white bg-[#0088FF] hover:bg-blue-600 flex justify-center items-center gap-2">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke="currentColor">
+          <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+        <span class="font-medium">Editar avaliação</span>
+      </button>
+    `
   }
+
+  return div;
 }
 
 /*************************************************
