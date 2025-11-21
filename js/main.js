@@ -70,7 +70,8 @@ async function loadWatchedMoviesInfo(){
         overview: dadosTMDB.overview,
         tagline: dadosTMDB.tagline,
         release_date: dadosTMDB.release_date,
-        runtime: dadosTMDB.runtime
+        runtime: dadosTMDB.runtime,
+        tmdb_rating: dadosTMDB.vote_average.toFixed(1)
       };
     })
   )
@@ -131,7 +132,7 @@ async function getMovies(searchTerm) {
   try {
     const res = await fetch(url, options);
     const data = await res.json();
-    showMovies(data.results, 'defaultList');
+    showMovies(data.results, 'discoverList'); //arrumar
   } catch (err) {
     console.error("Erro ao buscar filmes:", err);
   }
@@ -146,6 +147,7 @@ function showMovies(moviesList, tab) {
   moviesList.forEach(movie => {
     const movieCard = document.createElement("div");
     const posterPath = movie.poster_path ? BASE_IMAGE_URL + movie.poster_path : '';
+    const averageRating = tab === 'discoverList' || tab === 'savedList' ? movie.vote_average.toFixed(1) : movie.average_rating;
 
     movieCard.innerHTML = `
       <div class="space-y-1 overflow-hidden cursor-pointer flex flex-col">
@@ -160,7 +162,7 @@ function showMovies(moviesList, tab) {
             <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="white" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-star-icon lucide-star">
               <path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/>
             </svg>
-            <span class="text-[10px] font-medium">${movie.average_rating}</span>
+            <span class="text-[10px] font-medium">${averageRating}</span>
           </div>
         </div>
         <div class="h-[10%]">
@@ -170,8 +172,10 @@ function showMovies(moviesList, tab) {
     `;
 
     // Define o comportamento do clique dependendo da aba
-    movieCard.addEventListener('click', () => {
-      tab === 'watchedList' ? openMovieModal(movie) : getMovie(movie.id);
+    movieCard.addEventListener('click', async () => {
+      const movieData = tab === 'watchedList' ? movie : await getMovie(movie.id);
+
+      openMovieModal(movieData);
     });
 
     moviesListEl.append(movieCard);
@@ -188,8 +192,7 @@ async function getMovie(movieId) {
 
   try {
     const res = await fetch(url, options);
-    const data = await res.json();
-    openMovieModal(data);
+    return await res.json();
   } catch (err) {
     console.error("Erro ao carregar detalhes do filme:", err);
   }
@@ -201,8 +204,7 @@ async function getMovie(movieId) {
 
 function openMovieModal(movie) {
   document.body.style.overflow = 'hidden';
-  movie.tmdb_rating = movie.vote_average ? movie.vote_average : movie.tmdb_rating;
-
+  
   const movieModal = createModalWrapper();
   movieModal.appendChild(createMovieHeader(movie));
   movieModal.appendChild(createMovieInfo(movie));
@@ -300,14 +302,14 @@ function createMovieRatingList(movie){
       </div>
       <div class="pr-2 rounded-full text-white bg-[#4EBBC5] flex items-center gap-2">
         <img src="../img/tmdb.jpg" class="w-6 rounded-full">
-        <span class="block text-sm font-bold">${movie.tmdb_rating.toFixed(1)}</span>
+        <span class="block text-sm font-bold">${movie.tmdb_rating}</span>
       </div>
     `;
   }else{
     div.innerHTML = `
       <div class="pr-2 rounded-full text-white bg-[#4EBBC5] flex items-center gap-2">
         <img src="../img/tmdb.jpg" class="w-6 rounded-full">
-        <span class="block text-sm font-bold">${movie.tmdb_rating.toFixed(1)}</span>
+        <span class="block text-sm font-bold">${movie.vote_average.toFixed(1)}</span>
       </div>
     `
   }
@@ -336,19 +338,19 @@ function createMovieActionButtons(movie){
       </button>
     `
     
-    div.querySelector('#rate-movie-btn').addEventListener('click', openRatingModal(movie));
+    div.querySelector('#rate-movie-btn').addEventListener('click', () => openRatingModal(movie));
   } else {
     div.innerHTML = `
       <button class="py-2 px-3 rounded-lg hover:bg-gray-100 flex justify-center items-center gap-2">
         <svg class="w-4 h-4 text-gray-500" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke="currentColor">
-          <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/>
+          <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
         </svg>
         <span class="text-gray-500 font-medium">Remover</span>
       </button>
       <button id="rate-movie-btn" class="w-full py-2 px-3 rounded-lg text-white bg-[#0088FF] hover:bg-blue-600 flex justify-center items-center gap-2">
         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke="currentColor">
-          <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/>
-          <circle cx="12" cy="12" r="3"/>
+          <path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+          <path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/>
         </svg>
         <span class="font-medium">Editar avaliação</span>
       </button>
@@ -368,7 +370,6 @@ function openRatingModal(movie) {
   let currentReviewerIndex = 0;
 
   const movieModal = document.querySelector('#movie-modal');
-  const posterPath = movie.poster_path ? BASE_IMAGE_URL + movie.poster_path : '';
 
   // Etapa individual de nota
   function renderStep() {
@@ -378,10 +379,6 @@ function openRatingModal(movie) {
     const borderColor = reviewerColors[reviewer] || 'border-gray-400';
 
     movieModal.innerHTML = `
-      <div class="w-36 mb-4 mx-auto aspect-[2/3] rounded-xl overflow-hidden">
-        <img src="${posterPath}" alt="${movie.title}" class="w-full h-full object-cover">
-      </div>
-
       <h2 class="text-center text-xl font-bold text-slate-900">${movie.title}</h2>
 
        <div class="mt-8 text-center space-y-4">
@@ -526,7 +523,7 @@ async function saveMovie(movie, ratings) {
     watched_at: new Date().toISOString(),
     ratings,
     average_rating,
-    tmdb_rating: movie.vote_average,
+    // tmdb_rating: movie.vote_average.toFixed(),
     review: 'Filmaço hein!',
     created_at: new Date(),
     updated_at: new Date()
