@@ -117,12 +117,16 @@ document.addEventListener('DOMContentLoaded', await initApp());
  * 🔎 BUSCA DE FILMES NO TMDB
  *************************************************/
 
-searchForm.addEventListener('submit', e => {
+searchForm.addEventListener('submit', async e => {
   e.preventDefault();
-  moviesListEl.innerHTML = ''; // Limpa resultados anteriores
+  moviesListEl.innerHTML = '';
 
   const searchTerm = searchInput.value.trim();
-  if (searchTerm !== '') getMovies(searchTerm);
+
+  if (searchTerm !== ''){
+    const movies = await getMovies(searchTerm);
+    showMovies(movies.results, 'discoverList');
+  } 
   searchInput.value = "";
 });
 
@@ -131,8 +135,7 @@ async function getMovies(searchTerm) {
 
   try {
     const res = await fetch(url, options);
-    const data = await res.json();
-    showMovies(data.results, 'discoverList'); //arrumar
+    return await res.json();
   } catch (err) {
     console.error("Erro ao buscar filmes:", err);
   }
@@ -369,37 +372,38 @@ function openRatingModal(movie) {
   const ratings = {};
   let currentReviewerIndex = 0;
 
-  const movieModal = document.querySelector('#movie-modal');
+  const movieInfo = document.querySelector('#movie-info');
 
   // Etapa individual de nota
   function renderStep() {
     const reviewer = reviewers[currentReviewerIndex];
 
-    // Define a cor com base no reviewer atual
-    const borderColor = reviewerColors[reviewer] || 'border-gray-400';
+    movieInfo.innerHTML = `
+      <div>
+        <div>
+          <h2 class="text-3xl font-semibold text-slate-800">${movie.title}</h2>
+          <p class="text-[16px] font-light text-[#8C8C8C]">${capitalize(reviewer)}, que nota você dá para esse filme?</p>
+        </div>
 
-    movieModal.innerHTML = `
-      <h2 class="text-center text-xl font-bold text-slate-900">${movie.title}</h2>
+        <div class="mt-8 flex items-center gap-2">
+          <img 
+            src="../img/${reviewer}.jpg" 
+            class="w-14 rounded-full"
+          >
 
-       <div class="mt-8 text-center space-y-4">
-        <img 
-          src="../img/${reviewer}.jpg" 
-          class="mx-auto w-16 rounded-full border-2 ${borderColor}"
-        >
-        <p class="text-sm text-slate-600">${capitalize(reviewer)}, que nota você dá para esse filme?</p>
+          <input 
+            type="range" 
+            id="rating-input" 
+            min="0" 
+            max="10" 
+            step="0.5" 
+            class="w-full border-2 border-slate-200 rounded-xl p-3 text-center text-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
+            placeholder="0 a 10"
+          >
+        </div>
       </div>
 
-      <input 
-        type="number" 
-        id="rating-input" 
-        min="0" 
-        max="10" 
-        step="0.5" 
-        class="w-full border-2 border-slate-200 rounded-xl p-3 text-center text-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
-        placeholder="0 a 10"
-      >
-
-      <button id="next-btn" class="block ml-auto mt-4 px-6 py-3 rounded-xl text-white font-medium bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 transition-all">
+      <button id="next-btn" class="block ml-auto mt-4 py-2 px-3 rounded-lg text-white font-medium bg-[#0088FF] hover:bg-blue-600 transition-all">
         Próximo →
       </button>
     `;
