@@ -264,20 +264,24 @@ function createMovieInfo(movie){
 
   div.innerHTML = `
     <div>
-      <h2 class="text-3xl font-semibold text-slate-800">${movie.title}</h2>
-      <p class="text-[14px] font-light text-[#8C8C8C]">${movie.tagline}</p>
-
-      <div class="mt-2 mb-4 text-xs text-[#5E5E5E] flex items-center gap-2">
-        <div class="flex gap-2">
-          ${movie.genres.map(g => `<span class="px-2 py-[2px] rounded-full font-medium bg-[#EDEDED]">${g.name}</span>`).join('')}
-        </div>
-        <span>·</span>
-        <span>${movie.release_date.slice(0, 4)}</span>
-        <span>·</span>
-        <span>${formatRuntime(movie.runtime)}</span>
+      <div id="movie-header">
+        <h2 class="text-3xl font-semibold text-slate-800">${movie.title}</h2>
+        <p class="text-[14px] font-light text-[#8C8C8C]">${movie.tagline}</p>
       </div>
 
-      <p class="text-[16px] text-[#8C8C8C] font-light leading-[20px] line-clamp-6">${movie.overview}</p>
+      <div id="movie-footer">
+        <div class="mt-2 mb-4 text-xs text-[#5E5E5E] flex items-center gap-2">
+          <div class="flex gap-2">
+            ${movie.genres.map(g => `<span class="px-2 py-[2px] rounded-full font-medium bg-[#EDEDED]">${g.name}</span>`).join('')}
+          </div>
+          <span>·</span>
+          <span>${movie.release_date.slice(0, 4)}</span>
+          <span>·</span>
+          <span>${formatRuntime(movie.runtime)}</span>
+        </div>
+
+        <p class="text-[16px] text-[#8C8C8C] font-light leading-[20px] line-clamp-6">${movie.overview}</p>
+      </div>
     </div>
   `
   div.appendChild(createMovieRatingList(movie));
@@ -372,13 +376,13 @@ function openRatingModal(movie) {
   const ratings = {};
   let currentReviewerIndex = 0;
 
-  const movieInfo = document.querySelector('#movie-info');
+  const movieFooter = document.querySelector('#movie-info');
 
   // Etapa individual de nota
   function renderStep() {
     const reviewer = reviewers[currentReviewerIndex];
 
-    movieInfo.innerHTML = `
+    movieFooter.innerHTML = `
       <div>
         <div>
           <h2 class="text-3xl font-semibold text-slate-800">${movie.title}</h2>
@@ -409,7 +413,6 @@ function openRatingModal(movie) {
     `;
   }
 
-  // Tela final de resumo
   function renderSummary() {
     const ratingValues = Object.values(ratings);
     const average_rating = Number(
