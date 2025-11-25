@@ -284,7 +284,7 @@ function createMovieInfo(movie){
       </div>
     </div>
   `
-  div.appendChild(createMovieRatingList(movie));
+  div.querySelector('#movie-footer').appendChild(createMovieRatingList(movie));
   div.appendChild(createMovieActionButtons(movie));
 
   return div;
@@ -326,6 +326,7 @@ function createMovieRatingList(movie){
 
 function createMovieActionButtons(movie){
   const div = document.createElement('div');
+  div.id = "movie-action-buttons";
   div.className = 'mt-6 flex items-center gap-4';
 
   if (!isAlreadyWatched(movie.id)) {
@@ -371,39 +372,119 @@ function createMovieActionButtons(movie){
  * ⭐ MODAL DE AVALIAÇÃO DO FILME
  *************************************************/
 
+const sliderButton = document.getElementById('sliderButton');
+const progressBar = document.getElementById('progressBar');
+const valueDisplay = document.getElementById('valueDisplay');
+const sliderValue = document.getElementById('sliderValue');
+const container = sliderButton.parentElement;
+
+let isDragging = false;
+const minValue = 0;
+const maxValue = 10;
+
+function updateSlider(clientX) {
+    const rect = container.getBoundingClientRect();
+    let percentage = (clientX - rect.left) / rect.width;
+    percentage = Math.max(0, Math.min(1, percentage));
+    
+    const value = Math.round(percentage * maxValue * 2) / 2;
+    const adjustedPercentage = value / maxValue;
+    
+    sliderButton.style.left = `${adjustedPercentage * 100}%`;
+    progressBar.style.width = `${adjustedPercentage * 100}%`;
+    valueDisplay.textContent = value;
+    sliderValue.value = value;
+    
+    // Dispara evento de mudança
+    sliderValue.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
+sliderButton.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    sliderButton.classList.add('scale-110');
+});
+
+document.addEventListener('mousemove', (e) => {
+    if (isDragging) {
+        updateSlider(e.clientX);
+    }
+});
+
+document.addEventListener('mouseup', () => {
+    isDragging = false;
+    sliderButton.classList.remove('scale-110');
+});
+
+// Suporte para touch em dispositivos móveis
+sliderButton.addEventListener('touchstart', (e) => {
+    isDragging = true;
+    sliderButton.classList.add('scale-110');
+});
+
+document.addEventListener('touchmove', (e) => {
+    if (isDragging) {
+        updateSlider(e.touches[0].clientX);
+    }
+});
+
+document.addEventListener('touchend', () => {
+    isDragging = false;
+    sliderButton.classList.remove('scale-110');
+});
+
+// Clique na trilha para mover o slider
+container.addEventListener('click', (e) => {
+    if (e.target !== sliderButton && !sliderButton.contains(e.target)) {
+        updateSlider(e.clientX);
+    }
+});
+
 function openRatingModal(movie) {
+  document.querySelector('#movie-action-buttons').remove();
+
   const reviewers = ["evandro", "tauane", "kauane"];
   const ratings = {};
   let currentReviewerIndex = 0;
 
-  const movieFooter = document.querySelector('#movie-info');
-
-  // Etapa individual de nota
+  const movieHeader = document.querySelector('#movie-header');
+  const movieFooter = document.querySelector('#movie-footer');
+  
   function renderStep() {
     const reviewer = reviewers[currentReviewerIndex];
+    movieHeader.querySelector('p').innerHTML = capitalize(reviewer) + ' que nota você da para esse filme?'
 
     movieFooter.innerHTML = `
       <div>
-        <div>
-          <h2 class="text-3xl font-semibold text-slate-800">${movie.title}</h2>
-          <p class="text-[16px] font-light text-[#8C8C8C]">${capitalize(reviewer)}, que nota você dá para esse filme?</p>
-        </div>
-
         <div class="mt-8 flex items-center gap-2">
           <img 
             src="../img/${reviewer}.jpg" 
             class="w-14 rounded-full"
           >
 
-          <input 
-            type="range" 
-            id="rating-input" 
-            min="0" 
-            max="10" 
-            step="0.5" 
-            class="w-full border-2 border-slate-200 rounded-xl p-3 text-center text-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
-            placeholder="0 a 10"
-          >
+          <div class="w-full relative">
+            <!-- Input oculto para capturar o valor -->
+            <input type="hidden" id="sliderValue" name="sliderValue" value="5">
+            
+            <!-- Container do slider -->
+            <div class="relative pt-8">
+                <!-- Trilha do slider -->
+                <div class="absolute top-1/2 w-full h-2 bg-gray-300 rounded-full -translate-y-1/2"></div>
+                
+                <!-- Barra de progresso -->
+                <div id="progressBar" class="absolute top-1/2 h-2 bg-blue-500 rounded-full -translate-y-1/2 transition-all duration-150" style="width: 50%"></div>
+                
+                <!-- Botão do slider -->
+                <div id="sliderButton" class="absolute top-1/2 w-12 h-12 bg-blue-500 rounded-full shadow-lg cursor-pointer flex items-center justify-center text-white font-bold -translate-y-1/2 -translate-x-1/2 transition-all duration-150 hover:scale-110" style="left: 50%">
+                    <span id="valueDisplay">5</span>
+                </div>
+            </div>
+            
+            <!-- Labels min e max -->
+            <div class="flex justify-between mt-4 text-sm text-gray-600">
+                <span>0</span>
+                <span>10</span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -426,11 +507,7 @@ function openRatingModal(movie) {
       </div>
     `).join('');
 
-    movieModal.innerHTML = `
-      <img src="${BASE_IMAGE_URL}${movie.poster_path}" alt="${movie.title}" class="rounded-xl w-full object-cover">
-
-      <h2 class="text-xl font-bold mt-4 text-slate-800">${movie.title}</h2>
-
+    movieFooter.innerHTML = `
       <div class="text-left mt-6 space-y-2 bg-gray-50 rounded-xl p-4">
         ${notesList}
         <div class="py-3 px-2 flex justify-between items-center hover:bg-slate-50 transition-colors rounded-lg">
@@ -438,7 +515,6 @@ function openRatingModal(movie) {
           <span class="text-lg font-bold text-blue-600">${average_rating}</span>
         </div>
       </div>
-
 
       <div class="flex justify-center gap-4 mt-6">
         <button id="cancel-btn" class="bg-gray-200 text-slate-700 px-6 py-3 rounded-lg font-medium transition-all">
@@ -450,19 +526,18 @@ function openRatingModal(movie) {
       </div>
     `;
 
-    // Eventos dos botões
     document.querySelector('#save-btn').addEventListener('click', async () => {
       try {
         await saveMovie(movie, ratings);
-        movieModal.remove();
-        location.reload(); // 🔁 recarrega a página
+        movieFooter.remove();
+        location.reload();
       } catch (error) {
         console.error("Erro ao salvar o filme:", error);
       }
     });
 
     document.querySelector('#cancel-btn').addEventListener('click', () => {
-      movieModal.remove();
+      movieFooter.remove();
     });
   }
 
@@ -470,7 +545,7 @@ function openRatingModal(movie) {
   renderStep();
 
   // Evento "Próximo"
-  movieModal.addEventListener('click', e => {
+  movieFooter.addEventListener('click', e => {
     if (e.target.id === 'next-btn') {
       const input = document.querySelector("#rating-input");
       const value = parseFloat(input.value);
