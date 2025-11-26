@@ -372,72 +372,6 @@ function createMovieActionButtons(movie){
  * ⭐ MODAL DE AVALIAÇÃO DO FILME
  *************************************************/
 
-const sliderButton = document.getElementById('sliderButton');
-const progressBar = document.getElementById('progressBar');
-const valueDisplay = document.getElementById('valueDisplay');
-const sliderValue = document.getElementById('sliderValue');
-const container = sliderButton.parentElement;
-
-let isDragging = false;
-const minValue = 0;
-const maxValue = 10;
-
-function updateSlider(clientX) {
-    const rect = container.getBoundingClientRect();
-    let percentage = (clientX - rect.left) / rect.width;
-    percentage = Math.max(0, Math.min(1, percentage));
-    
-    const value = Math.round(percentage * maxValue * 2) / 2;
-    const adjustedPercentage = value / maxValue;
-    
-    sliderButton.style.left = `${adjustedPercentage * 100}%`;
-    progressBar.style.width = `${adjustedPercentage * 100}%`;
-    valueDisplay.textContent = value;
-    sliderValue.value = value;
-    
-    // Dispara evento de mudança
-    sliderValue.dispatchEvent(new Event('change', { bubbles: true }));
-}
-
-sliderButton.addEventListener('mousedown', (e) => {
-    isDragging = true;
-    sliderButton.classList.add('scale-110');
-});
-
-document.addEventListener('mousemove', (e) => {
-    if (isDragging) {
-        updateSlider(e.clientX);
-    }
-});
-
-document.addEventListener('mouseup', () => {
-    isDragging = false;
-    sliderButton.classList.remove('scale-110');
-});
-
-// Suporte para touch em dispositivos móveis
-sliderButton.addEventListener('touchstart', (e) => {
-    isDragging = true;
-    sliderButton.classList.add('scale-110');
-});
-
-document.addEventListener('touchmove', (e) => {
-    if (isDragging) {
-        updateSlider(e.touches[0].clientX);
-    }
-});
-
-document.addEventListener('touchend', () => {
-    isDragging = false;
-    sliderButton.classList.remove('scale-110');
-});
-
-// Clique na trilha para mover o slider
-container.addEventListener('click', (e) => {
-    if (e.target !== sliderButton && !sliderButton.contains(e.target)) {
-        updateSlider(e.clientX);
-    }
-});
 
 function openRatingModal(movie) {
   document.querySelector('#movie-action-buttons').remove();
@@ -455,34 +389,28 @@ function openRatingModal(movie) {
 
     movieFooter.innerHTML = `
       <div>
-        <div class="mt-8 flex items-center gap-2">
+        <div class="mt-8 flex items-center gap-4">
           <img 
             src="../img/${reviewer}.jpg" 
             class="w-14 rounded-full"
           >
 
           <div class="w-full relative">
-            <!-- Input oculto para capturar o valor -->
             <input type="hidden" id="sliderValue" name="sliderValue" value="5">
             
-            <!-- Container do slider -->
             <div class="relative pt-8">
-                <!-- Trilha do slider -->
-                <div class="absolute top-1/2 w-full h-2 bg-gray-300 rounded-full -translate-y-1/2"></div>
-                
-                <!-- Barra de progresso -->
-                <div id="progressBar" class="absolute top-1/2 h-2 bg-blue-500 rounded-full -translate-y-1/2 transition-all duration-150" style="width: 50%"></div>
-                
-                <!-- Botão do slider -->
-                <div id="sliderButton" class="absolute top-1/2 w-12 h-12 bg-blue-500 rounded-full shadow-lg cursor-pointer flex items-center justify-center text-white font-bold -translate-y-1/2 -translate-x-1/2 transition-all duration-150 hover:scale-110" style="left: 50%">
-                    <span id="valueDisplay">5</span>
-                </div>
+              <div class="absolute top-1/2 w-full h-2 bg-[#DEE9F8] rounded-full -translate-y-1/2"></div>
+              
+              <div id="progressBar" class="absolute top-1/2 h-2 bg-[#338CD5] rounded-full -translate-y-1/2 transition-all duration-150" style="width: 50%"></div>
+              
+              <div id="sliderButton" class="select-none cursor-pointer absolute top-1/2 w-[4px] h-[30px] p-1 text-white font-bold rounded-sm border-l-4 border-r-4 border-white bg-[#338CD5] flex items-center justify-center -translate-y-1/2 -translate-x-1/2 transition-all duration-150 hover:scale-110" style="left: 50%">
+                <span id="valueDisplay" class="absolute -top-8 py-1 px-2 rounded-md text-[14px] bg-[#338CD5]">5</span>
+              </div>
             </div>
             
-            <!-- Labels min e max -->
             <div class="flex justify-between mt-4 text-sm text-gray-600">
-                <span>0</span>
-                <span>10</span>
+              <span>0</span>
+              <span>10</span>
             </div>
           </div>
         </div>
@@ -562,7 +490,76 @@ function openRatingModal(movie) {
       else renderSummary();
     }
   });
+
+  const sliderButton = document.getElementById('sliderButton');
+  const progressBar = document.getElementById('progressBar');
+  const valueDisplay = document.getElementById('valueDisplay');
+  const sliderValue = document.getElementById('sliderValue');
+  const container = sliderButton.parentElement;
+  
+  let isDragging = false;
+  const minValue = 0;
+  const maxValue = 10;
+  
+  function updateSlider(clientX) {
+    const rect = container.getBoundingClientRect();
+    let percentage = (clientX - rect.left) / rect.width;
+    percentage = Math.max(0, Math.min(1, percentage));
+    
+    const value = Math.round(percentage * maxValue * 2) / 2;
+    const adjustedPercentage = value / maxValue;
+    
+    sliderButton.style.left = `${adjustedPercentage * 100}%`;
+    progressBar.style.width = `${adjustedPercentage * 100}%`;
+    valueDisplay.textContent = value;
+    sliderValue.value = value;
+    
+    // Dispara evento de mudança
+    sliderValue.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+  
+  sliderButton.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    sliderButton.classList.add('scale-110');
+  });
+  
+  document.addEventListener('mousemove', (e) => {
+    if (isDragging) {
+      updateSlider(e.clientX);
+    }
+  });
+  
+  document.addEventListener('mouseup', () => {
+    isDragging = false;
+    sliderButton.classList.remove('scale-110');
+  });
+  
+  // Suporte para touch em dispositivos móveis
+  sliderButton.addEventListener('touchstart', (e) => {
+    isDragging = true;
+    sliderButton.classList.add('scale-110');
+  });
+  
+  document.addEventListener('touchmove', (e) => {
+    if (isDragging) {
+      updateSlider(e.touches[0].clientX);
+    }
+  });
+  
+  document.addEventListener('touchend', () => {
+    isDragging = false;
+    sliderButton.classList.remove('scale-110');
+  });
+  
+  // Clique na trilha para mover o slider
+  container.addEventListener('click', (e) => {
+    if (e.target !== sliderButton && !sliderButton.contains(e.target)) {
+      updateSlider(e.clientX);
+    }
+  });
+
 }
+
 
 
 /*************************************************
