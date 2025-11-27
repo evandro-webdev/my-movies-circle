@@ -211,11 +211,6 @@ function openMovieModal(movie) {
   const movieModal = createModalWrapper();
   movieModal.appendChild(createMovieHeader(movie));
   movieModal.appendChild(createMovieInfo(movie));
-  
-  movieModal.querySelector('#close-modal').addEventListener('click', (e) => {
-    movieModal.remove();
-    document.body.style.overflow = 'auto';
-  })
 
   document.body.appendChild(movieModal);
 }
@@ -253,6 +248,11 @@ function createMovieHeader(movie){
       </button>
     </div>
   `
+
+  div.querySelector('#close-modal').addEventListener('click', (e) => {
+    document.querySelector('#movie-modal').remove();
+    document.body.style.overflow = 'auto';
+  })
   
   return div;
 }
@@ -372,7 +372,6 @@ function createMovieActionButtons(movie){
  * ⭐ MODAL DE AVALIAÇÃO DO FILME
  *************************************************/
 
-
 function openRatingModal(movie) {
   document.querySelector('#movie-action-buttons').remove();
 
@@ -383,35 +382,43 @@ function openRatingModal(movie) {
   const movieHeader = document.querySelector('#movie-header');
   const movieFooter = document.querySelector('#movie-footer');
   
+  renderStep();
+
+  movieFooter.addEventListener('click', e => {
+    if (e.target.id === 'next-btn') {
+      const input = document.querySelector("#rating-input");
+      const value = parseFloat(input.value);
+
+      if (isNaN(value) || value < 0 || value > 10) {
+        alert("Por favor, digite uma nota válida de 0 a 10.");
+        return;
+      }
+
+      ratings[reviewers[currentReviewerIndex]] = value;
+      currentReviewerIndex++;
+
+      currentReviewerIndex < reviewers.length ? renderStep() : renderSummary();
+    }
+  });
+
   function renderStep() {
     const reviewer = reviewers[currentReviewerIndex];
     movieHeader.querySelector('p').innerHTML = capitalize(reviewer) + ' que nota você da para esse filme?'
 
-    movieFooter.innerHTML = `
+    movieFooter.innerHTML = createStepHTML(reviewer);
+    initializeSlider();
+  }
+
+  function createStepHTML(reviewer) {
+    return `
       <div>
         <div class="mt-8 flex items-center gap-4">
           <img 
             src="../img/${reviewer}.jpg" 
-            class="w-14 rounded-full"
+            class="w-13 rounded-full"
           >
-
           <div class="w-full relative">
-            <input type="hidden" id="sliderValue" name="sliderValue" value="5">
-            
-            <div class="relative pt-8">
-              <div class="absolute top-1/2 w-full h-2 bg-[#DEE9F8] rounded-full -translate-y-1/2"></div>
-              
-              <div id="progressBar" class="absolute top-1/2 h-2 bg-[#338CD5] rounded-full -translate-y-1/2 transition-all duration-150" style="width: 50%"></div>
-              
-              <div id="sliderButton" class="select-none cursor-pointer absolute top-1/2 w-[4px] h-[30px] p-1 text-white font-bold rounded-sm border-l-4 border-r-4 border-white bg-[#338CD5] flex items-center justify-center -translate-y-1/2 -translate-x-1/2 transition-all duration-150 hover:scale-110" style="left: 50%">
-                <span id="valueDisplay" class="absolute -top-8 py-1 px-2 rounded-md text-[14px] bg-[#338CD5]">5</span>
-              </div>
-            </div>
-            
-            <div class="flex justify-between mt-4 text-sm text-gray-600">
-              <span>0</span>
-              <span>10</span>
-            </div>
+            ${createSliderHTML()}
           </div>
         </div>
       </div>
@@ -420,6 +427,73 @@ function openRatingModal(movie) {
         Próximo →
       </button>
     `;
+  }
+
+  function createSliderHTML() {
+    return `
+      <input type="hidden" id="rating-input" name="rating-input" value="5">
+      
+      <div class="relative pt-8">
+        <div class="absolute top-1/2 w-full h-[10px] bg-[#DEE9F8] rounded-full -translate-y-1/2"></div>
+        
+        <div id="progressBar" class="absolute top-1/2 h-[10px] bg-[#338CD5] rounded-l-full -translate-y-1/2 transition-all duration-150" style="width: 50%"></div>
+        
+        <div
+          id="sliderButton"
+          class="select-none cursor-pointer absolute top-1/2 w-[4px] h-[30px] text-white font-bold rounded-sm bg-[#338CD5] 
+                flex items-center justify-center -translate-y-1/2 -translate-x-1/2 transition-all duration-150" 
+          style="left: 50%; box-shadow: -4px 0 0 0 white, 4px 0 0 0 white;"
+        >
+          <span id="valueDisplay" class="absolute -top-8 py-1 px-2 rounded-md text-[14px] bg-[#338CD5]">5</span>
+        </div>
+      </div>
+    `;
+  }
+
+  function initializeSlider() {
+    const sliderButton = document.getElementById('sliderButton');
+    const progressBar = document.getElementById('progressBar');
+    const valueDisplay = document.getElementById('valueDisplay');
+    const ratingInput = document.getElementById('rating-input');
+    const container = sliderButton.parentElement;
+    
+    let isDragging = false;
+    const minValue = 0;
+    const maxValue = 10;
+    
+    function updateSlider(clientX) {
+      const rect = container.getBoundingClientRect();
+      let percentage = (clientX - rect.left) / rect.width;
+      percentage = Math.max(0, Math.min(1, percentage));
+      
+      const value = Math.round(percentage * maxValue * 2) / 2;
+      const adjustedPercentage = value / maxValue;
+      
+      sliderButton.style.left = `${adjustedPercentage * 100}%`;
+      progressBar.style.width = `${adjustedPercentage * 100}%`;
+      valueDisplay.textContent = value;
+      ratingInput.value = value;
+      
+      ratingInput.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    
+    const handleMouseDown = () => isDragging = true;
+    const handleMouseUp = () => isDragging = false;
+    const handleMouseMove = (e) => isDragging && updateSlider(e.clientX);
+    const handleTouchMove = (e) => isDragging && updateSlider(e.touches[0].clientX);
+    const handleContainerClick = (e) => {
+      if (e.target !== sliderButton && !sliderButton.contains(e.target)) {
+        updateSlider(e.clientX);
+      }
+    };
+    
+    sliderButton.addEventListener('mousedown', handleMouseDown);
+    sliderButton.addEventListener('touchstart', handleMouseDown);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('touchmove', handleTouchMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('touchend', handleMouseUp);
+    container.addEventListener('click', handleContainerClick);
   }
 
   function renderSummary() {
@@ -469,32 +543,10 @@ function openRatingModal(movie) {
     });
   }
 
-  // Inicializa primeira etapa
-  renderStep();
-
-  // Evento "Próximo"
-  movieFooter.addEventListener('click', e => {
-    if (e.target.id === 'next-btn') {
-      const input = document.querySelector("#rating-input");
-      const value = parseFloat(input.value);
-
-      if (isNaN(value) || value < 0 || value > 10) {
-        alert("Por favor, digite uma nota válida de 0 a 10.");
-        return;
-      }
-
-      ratings[reviewers[currentReviewerIndex]] = value;
-      currentReviewerIndex++;
-
-      if (currentReviewerIndex < reviewers.length) renderStep();
-      else renderSummary();
-    }
-  });
-
   const sliderButton = document.getElementById('sliderButton');
   const progressBar = document.getElementById('progressBar');
   const valueDisplay = document.getElementById('valueDisplay');
-  const sliderValue = document.getElementById('sliderValue');
+  const ratingInput = document.getElementById('rating-input');
   const container = sliderButton.parentElement;
   
   let isDragging = false;
@@ -512,15 +564,14 @@ function openRatingModal(movie) {
     sliderButton.style.left = `${adjustedPercentage * 100}%`;
     progressBar.style.width = `${adjustedPercentage * 100}%`;
     valueDisplay.textContent = value;
-    sliderValue.value = value;
+    ratingInput.value = value;
     
     // Dispara evento de mudança
-    sliderValue.dispatchEvent(new Event('change', { bubbles: true }));
+    ratingInput.dispatchEvent(new Event('change', { bubbles: true }));
   }
   
   sliderButton.addEventListener('mousedown', (e) => {
     isDragging = true;
-    sliderButton.classList.add('scale-110');
   });
   
   document.addEventListener('mousemove', (e) => {
@@ -531,13 +582,11 @@ function openRatingModal(movie) {
   
   document.addEventListener('mouseup', () => {
     isDragging = false;
-    sliderButton.classList.remove('scale-110');
   });
   
   // Suporte para touch em dispositivos móveis
   sliderButton.addEventListener('touchstart', (e) => {
     isDragging = true;
-    sliderButton.classList.add('scale-110');
   });
   
   document.addEventListener('touchmove', (e) => {
@@ -548,7 +597,6 @@ function openRatingModal(movie) {
   
   document.addEventListener('touchend', () => {
     isDragging = false;
-    sliderButton.classList.remove('scale-110');
   });
   
   // Clique na trilha para mover o slider
@@ -560,7 +608,9 @@ function openRatingModal(movie) {
 
 }
 
+function create(){
 
+}
 
 /*************************************************
  * 🧮 FUNÇÕES AUXILIARES
