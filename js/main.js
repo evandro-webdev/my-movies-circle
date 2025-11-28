@@ -209,7 +209,7 @@ function openMovieModal(movie) {
   document.body.style.overflow = 'hidden';
   
   const movieModal = createModalWrapper();
-  movieModal.appendChild(createMovieHeader(movie));
+  movieModal.appendChild(createMoviePoster(movie));
   movieModal.appendChild(createMovieInfo(movie));
 
   document.body.appendChild(movieModal);
@@ -223,7 +223,7 @@ function createModalWrapper(){
   return movieModal;
 }
 
-function createMovieHeader(movie){
+function createMoviePoster(movie){
   const posterPath = movie.poster_path ? BASE_IMAGE_URL + movie.poster_path : '';
 
   const div = document.createElement("div");
@@ -241,10 +241,15 @@ function createMovieHeader(movie){
 
     <div class="fixed top-0 left-0 w-full px-2 py-3 text-white flex justify-between">
       <button id="close-modal">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-left-icon lucide-arrow-left"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>
+        </svg>
       </button>
       <button>
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-ellipsis-vertical-icon lucide-ellipsis-vertical"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/>
+          <circle cx="12" cy="19" r="1"/>
+        </svg>
       </button>
     </div>
   `
@@ -381,6 +386,9 @@ function openRatingModal(movie) {
 
   const movieHeader = document.querySelector('#movie-header');
   const movieFooter = document.querySelector('#movie-footer');
+
+  const movieSubtitle = movieHeader.querySelector('p');
+  movieSubtitle.className = 'text-[16px] font-light text-[#8C8C8C]'
   
   renderStep();
 
@@ -403,7 +411,7 @@ function openRatingModal(movie) {
 
   function renderStep() {
     const reviewer = reviewers[currentReviewerIndex];
-    movieHeader.querySelector('p').innerHTML = capitalize(reviewer) + ' que nota você da para esse filme?'
+    movieSubtitle.innerHTML = capitalize(reviewer) + ' que nota você da para esse filme?'
 
     movieFooter.innerHTML = createStepHTML(reviewer);
     initializeSlider();
@@ -411,7 +419,7 @@ function openRatingModal(movie) {
 
   function createStepHTML(reviewer) {
     return `
-      <div>
+      <div class="space-y-2">
         <div class="mt-8 flex items-center gap-4">
           <img 
             src="../img/${reviewer}.jpg" 
@@ -421,10 +429,15 @@ function openRatingModal(movie) {
             ${createSliderHTML()}
           </div>
         </div>
+
+        <textarea class="w-full p-3 rounded-md border text-[14px] border-[#DEE9F8]" rows="3" placeholder="Algum comentário?"></textarea>
       </div>
 
-      <button id="next-btn" class="block ml-auto mt-4 py-2 px-3 rounded-lg text-white font-medium bg-[#0088FF] hover:bg-blue-600 transition-all">
-        Próximo →
+      <button id="next-btn" class="block ml-auto mt-4 py-2 px-3 rounded-lg text-white bg-[#0088FF] hover:bg-blue-600 transition-all flex items-center gap-2">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
+        </svg>
+        <span class="font-medium">Próximo</span>
       </button>
     `;
   }
@@ -497,33 +510,44 @@ function openRatingModal(movie) {
   }
 
   function renderSummary() {
-    const ratingValues = Object.values(ratings);
-    const average_rating = Number(
-      (ratingValues.reduce((a, b) => a + b, 0) / ratingValues.length).toFixed(1)
-    );
+    movieHeader.className = 'text-center'
+    movieSubtitle.innerHTML = 'Confira o resumo das notas:';
+
+    // const ratingValues = Object.values(ratings);
+    // const average_rating = Number(
+    //   (ratingValues.reduce((a, b) => a + b, 0) / ratingValues.length).toFixed(1)
+    // );
 
     const notesList = reviewers.map(r => `
-      <div class="py-3 px-2 border-b border-gray-100 flex justify-between items-center hover:bg-slate-50 transition-colors rounded-lg">
-        <span class="font-semibold capitalize text-slate-700">${r}</span>
-        <span class="text-lg font-bold text-blue-600">${ratings[r]}</span>
+      <div class="flex items-center relative">
+        <img 
+          src="../img/${r}.jpg" 
+          class="w-12 rounded-full absolute -left-2 top-1/2 -translate-y-1/2 z-10"
+        >
+        <div class="w-full py-2 px-14 rounded-lg ${reviewerColors[r]}">
+          <span class="text-[14px] font-bold capitalize text-white">${r}: ${ratings[r]}</span>
+        </div>
       </div>
     `).join('');
 
     movieFooter.innerHTML = `
-      <div class="text-left mt-6 space-y-2 bg-gray-50 rounded-xl p-4">
+      <div class="max-w-50 my-8 mx-auto space-y-4">
         ${notesList}
-        <div class="py-3 px-2 flex justify-between items-center hover:bg-slate-50 transition-colors rounded-lg">
-          <span class="font-semibold capitalize text-slate-700">Média:</span>
-          <span class="text-lg font-bold text-blue-600">${average_rating}</span>
-        </div>
       </div>
 
       <div class="flex justify-center gap-4 mt-6">
-        <button id="cancel-btn" class="bg-gray-200 text-slate-700 px-6 py-3 rounded-lg font-medium transition-all">
-          Cancelar
+        <button id="cancel-btn" class="py-2 px-3 rounded-lg hover:bg-gray-100 flex justify-center items-center gap-2">
+          <svg class="w-4 h-4 text-gray-500" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke="currentColor">
+            <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+          </svg>
+          <span class="text-gray-500 font-medium">Cancelar</span>
         </button>
-        <button id="save-btn" class="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium">
-          Salvar filme
+        <button id="save-btn" class="w-full py-2 px-3 rounded-lg text-white bg-[#0088FF] hover:bg-blue-600 flex justify-center items-center gap-2">
+          <svg class="w-4 h-4 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/>
+            <path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"/><path d="M7 3v4a1 1 0 0 0 1 1h7"/>
+          </svg>
+          <span class="font-medium">Salvar avaliação</span>
         </button>
       </div>
     `;
@@ -542,74 +566,6 @@ function openRatingModal(movie) {
       movieFooter.remove();
     });
   }
-
-  const sliderButton = document.getElementById('sliderButton');
-  const progressBar = document.getElementById('progressBar');
-  const valueDisplay = document.getElementById('valueDisplay');
-  const ratingInput = document.getElementById('rating-input');
-  const container = sliderButton.parentElement;
-  
-  let isDragging = false;
-  const minValue = 0;
-  const maxValue = 10;
-  
-  function updateSlider(clientX) {
-    const rect = container.getBoundingClientRect();
-    let percentage = (clientX - rect.left) / rect.width;
-    percentage = Math.max(0, Math.min(1, percentage));
-    
-    const value = Math.round(percentage * maxValue * 2) / 2;
-    const adjustedPercentage = value / maxValue;
-    
-    sliderButton.style.left = `${adjustedPercentage * 100}%`;
-    progressBar.style.width = `${adjustedPercentage * 100}%`;
-    valueDisplay.textContent = value;
-    ratingInput.value = value;
-    
-    // Dispara evento de mudança
-    ratingInput.dispatchEvent(new Event('change', { bubbles: true }));
-  }
-  
-  sliderButton.addEventListener('mousedown', (e) => {
-    isDragging = true;
-  });
-  
-  document.addEventListener('mousemove', (e) => {
-    if (isDragging) {
-      updateSlider(e.clientX);
-    }
-  });
-  
-  document.addEventListener('mouseup', () => {
-    isDragging = false;
-  });
-  
-  // Suporte para touch em dispositivos móveis
-  sliderButton.addEventListener('touchstart', (e) => {
-    isDragging = true;
-  });
-  
-  document.addEventListener('touchmove', (e) => {
-    if (isDragging) {
-      updateSlider(e.touches[0].clientX);
-    }
-  });
-  
-  document.addEventListener('touchend', () => {
-    isDragging = false;
-  });
-  
-  // Clique na trilha para mover o slider
-  container.addEventListener('click', (e) => {
-    if (e.target !== sliderButton && !sliderButton.contains(e.target)) {
-      updateSlider(e.clientX);
-    }
-  });
-
-}
-
-function create(){
-
 }
 
 /*************************************************
@@ -658,6 +614,6 @@ async function saveMovie(movie, ratings) {
     updated_at: new Date()
   });
 
-  alert(`🎬 O filme "${movie.title}" foi salvo com média: ${average_rating}!`);
+  alert(`🎬 O filme "${movie.title}" foi salvo com média: ${average_rating}!`); //mudar para toast notification
 }
 
