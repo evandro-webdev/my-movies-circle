@@ -217,7 +217,7 @@ function openMovieModal(movie) {
 
 function createModalWrapper(){
   const movieModal = document.createElement("div");
-  movieModal.className = "fixed top-0 w-full h-full bg-white overflow-y-auto";
+  movieModal.className = "fixed top-0 z-50 w-full h-full bg-white overflow-y-auto";
   movieModal.id = "movie-modal";
 
   return movieModal;
@@ -392,23 +392,6 @@ function openRatingModal(movie) {
   
   renderStep();
 
-  movieFooter.addEventListener('click', e => {
-    if (e.target.id === 'next-btn') {
-      const input = document.querySelector("#rating-input");
-      const value = parseFloat(input.value);
-
-      if (isNaN(value) || value < 0 || value > 10) {
-        alert("Por favor, digite uma nota válida de 0 a 10.");
-        return;
-      }
-
-      ratings[reviewers[currentReviewerIndex]] = value;
-      currentReviewerIndex++;
-
-      currentReviewerIndex < reviewers.length ? renderStep() : renderSummary();
-    }
-  });
-
   function renderStep() {
     const reviewer = reviewers[currentReviewerIndex];
     movieSubtitle.innerHTML = capitalize(reviewer) + ' que nota você da para esse filme?'
@@ -417,106 +400,9 @@ function openRatingModal(movie) {
     initializeSlider();
   }
 
-  function createStepHTML(reviewer) {
-    return `
-      <div class="space-y-2">
-        <div class="mt-8 flex items-center gap-4">
-          <img 
-            src="../img/${reviewer}.jpg" 
-            class="w-13 rounded-full"
-          >
-          <div class="w-full relative">
-            ${createSliderHTML()}
-          </div>
-        </div>
-
-        <textarea class="w-full p-3 rounded-md border text-[14px] border-[#DEE9F8]" rows="3" placeholder="Algum comentário?"></textarea>
-      </div>
-
-      <button id="next-btn" class="block ml-auto mt-4 py-2 px-3 rounded-lg text-white bg-[#0088FF] hover:bg-blue-600 transition-all flex items-center gap-2">
-        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
-        </svg>
-        <span class="font-medium">Próximo</span>
-      </button>
-    `;
-  }
-
-  function createSliderHTML() {
-    return `
-      <input type="hidden" id="rating-input" name="rating-input" value="5">
-      
-      <div class="relative pt-8">
-        <div class="absolute top-1/2 w-full h-[10px] bg-[#DEE9F8] rounded-full -translate-y-1/2"></div>
-        
-        <div id="progressBar" class="absolute top-1/2 h-[10px] bg-[#338CD5] rounded-l-full -translate-y-1/2 transition-all duration-150" style="width: 50%"></div>
-        
-        <div
-          id="sliderButton"
-          class="select-none cursor-pointer absolute top-1/2 w-[4px] h-[30px] text-white font-bold rounded-sm bg-[#338CD5] 
-                flex items-center justify-center -translate-y-1/2 -translate-x-1/2 transition-all duration-150" 
-          style="left: 50%; box-shadow: -4px 0 0 0 white, 4px 0 0 0 white;"
-        >
-          <span id="valueDisplay" class="absolute -top-8 py-1 px-2 rounded-md text-[14px] bg-[#338CD5]">5</span>
-        </div>
-      </div>
-    `;
-  }
-
-  function initializeSlider() {
-    const sliderButton = document.getElementById('sliderButton');
-    const progressBar = document.getElementById('progressBar');
-    const valueDisplay = document.getElementById('valueDisplay');
-    const ratingInput = document.getElementById('rating-input');
-    const container = sliderButton.parentElement;
-    
-    let isDragging = false;
-    const minValue = 0;
-    const maxValue = 10;
-    
-    function updateSlider(clientX) {
-      const rect = container.getBoundingClientRect();
-      let percentage = (clientX - rect.left) / rect.width;
-      percentage = Math.max(0, Math.min(1, percentage));
-      
-      const value = Math.round(percentage * maxValue * 2) / 2;
-      const adjustedPercentage = value / maxValue;
-      
-      sliderButton.style.left = `${adjustedPercentage * 100}%`;
-      progressBar.style.width = `${adjustedPercentage * 100}%`;
-      valueDisplay.textContent = value;
-      ratingInput.value = value;
-      
-      ratingInput.dispatchEvent(new Event('change', { bubbles: true }));
-    }
-    
-    const handleMouseDown = () => isDragging = true;
-    const handleMouseUp = () => isDragging = false;
-    const handleMouseMove = (e) => isDragging && updateSlider(e.clientX);
-    const handleTouchMove = (e) => isDragging && updateSlider(e.touches[0].clientX);
-    const handleContainerClick = (e) => {
-      if (e.target !== sliderButton && !sliderButton.contains(e.target)) {
-        updateSlider(e.clientX);
-      }
-    };
-    
-    sliderButton.addEventListener('mousedown', handleMouseDown);
-    sliderButton.addEventListener('touchstart', handleMouseDown);
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('touchmove', handleTouchMove);
-    document.addEventListener('mouseup', handleMouseUp);
-    document.addEventListener('touchend', handleMouseUp);
-    container.addEventListener('click', handleContainerClick);
-  }
-
   function renderSummary() {
     movieHeader.className = 'text-center'
     movieSubtitle.innerHTML = 'Confira o resumo das notas:';
-
-    // const ratingValues = Object.values(ratings);
-    // const average_rating = Number(
-    //   (ratingValues.reduce((a, b) => a + b, 0) / ratingValues.length).toFixed(1)
-    // );
 
     const notesList = reviewers.map(r => `
       <div class="flex items-center relative">
@@ -543,7 +429,7 @@ function openRatingModal(movie) {
           <span class="text-gray-500 font-medium">Cancelar</span>
         </button>
         <button id="save-btn" class="w-full py-2 px-3 rounded-lg text-white bg-[#0088FF] hover:bg-blue-600 flex justify-center items-center gap-2">
-          <svg class="w-4 h-4 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/>
             <path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"/><path d="M7 3v4a1 1 0 0 0 1 1h7"/>
           </svg>
@@ -555,7 +441,7 @@ function openRatingModal(movie) {
     document.querySelector('#save-btn').addEventListener('click', async () => {
       try {
         await saveMovie(movie, ratings);
-        movieFooter.remove();
+        document.querySelector('#movie-modal').remove();
         location.reload();
       } catch (error) {
         console.error("Erro ao salvar o filme:", error);
@@ -563,9 +449,118 @@ function openRatingModal(movie) {
     });
 
     document.querySelector('#cancel-btn').addEventListener('click', () => {
-      movieFooter.remove();
+      document.querySelector('#movie-modal').remove();
+      document.body.style.overflow = 'auto';
     });
   }
+
+  movieFooter.addEventListener('click', e => {
+    if (e.target.id === 'next-btn') {
+      const input = document.querySelector("#rating-input");
+      const value = parseFloat(input.value);
+
+      if (isNaN(value) || value < 0 || value > 10) {
+        alert("Por favor, digite uma nota válida de 0 a 10.");
+        return;
+      }
+
+      ratings[reviewers[currentReviewerIndex]] = value;
+      currentReviewerIndex++;
+
+      currentReviewerIndex < reviewers.length ? renderStep() : renderSummary();
+    }
+  });
+}
+
+function createStepHTML(reviewer) {
+  return `
+    <div class="space-y-2">
+      <div class="mt-8 flex items-center gap-4">
+        <img 
+          src="../img/${reviewer}.jpg" 
+          class="w-13 rounded-full"
+        >
+        <div class="w-full relative">
+          ${createSliderHTML()}
+        </div>
+      </div>
+
+      <textarea class="w-full p-3 rounded-md border text-[14px] border-[#DEE9F8]" rows="3" placeholder="Algum comentário?"></textarea>
+    </div>
+
+    <button id="next-btn" class="block ml-auto mt-4 py-2 px-3 rounded-lg text-white bg-[#0088FF] hover:bg-blue-600 transition-all flex items-center gap-2">
+      <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
+      </svg>
+      <span class="font-medium">Próximo</span>
+    </button>
+  `;
+}
+
+function createSliderHTML() {
+  return `
+    <input type="hidden" id="rating-input" name="rating-input" value="5">
+    
+    <div class="relative pt-8">
+      <div class="absolute top-1/2 w-full h-[10px] bg-[#DEE9F8] rounded-full -translate-y-1/2"></div>
+      
+      <div id="progressBar" class="absolute top-1/2 h-[10px] bg-[#338CD5] rounded-l-full -translate-y-1/2 transition-all duration-150" style="width: 50%"></div>
+      
+      <div
+        id="sliderButton"
+        class="select-none cursor-pointer absolute top-1/2 w-[4px] h-[30px] text-white font-bold rounded-sm bg-[#338CD5] 
+              flex items-center justify-center -translate-y-1/2 -translate-x-1/2 transition-all duration-150" 
+        style="left: 50%; box-shadow: -4px 0 0 0 white, 4px 0 0 0 white;"
+      >
+        <span id="valueDisplay" class="absolute -top-8 py-1 px-2 rounded-md text-[14px] bg-[#338CD5]">5</span>
+      </div>
+    </div>
+  `;
+}
+
+function initializeSlider() {
+  const sliderButton = document.getElementById('sliderButton');
+  const progressBar = document.getElementById('progressBar');
+  const valueDisplay = document.getElementById('valueDisplay');
+  const ratingInput = document.getElementById('rating-input');
+  const container = sliderButton.parentElement;
+  
+  let isDragging = false;
+  const maxValue = 10;
+  
+  function updateSlider(clientX) {
+    const rect = container.getBoundingClientRect();
+    let percentage = (clientX - rect.left) / rect.width;
+    percentage = Math.max(0, Math.min(1, percentage));
+    
+    const value = Math.round(percentage * maxValue * 2) / 2;
+    const adjustedPercentage = value / maxValue;
+    
+    sliderButton.style.left = `${adjustedPercentage * 100}%`;
+    progressBar.style.width = `${adjustedPercentage * 100}%`;
+    valueDisplay.textContent = value;
+    ratingInput.value = value;
+    
+    ratingInput.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+  
+  const handleMouseDown = () => isDragging = true;
+  const handleMouseUp = () => isDragging = false;
+  const handleMouseMove = (e) => isDragging && updateSlider(e.clientX);
+  const handleTouchMove = (e) => isDragging && updateSlider(e.touches[0].clientX);
+  const handleContainerClick = (e) => {
+    if (e.target !== sliderButton && !sliderButton.contains(e.target)) {
+      updateSlider(e.clientX);
+    }
+  };
+  
+  sliderButton.addEventListener('mousedown', handleMouseDown);
+  sliderButton.addEventListener('touchstart', handleMouseDown);
+  document.addEventListener('mousemove', handleMouseMove);
+  document.addEventListener('touchmove', handleTouchMove);
+  document.addEventListener('mouseup', handleMouseUp);
+  document.addEventListener('touchend', handleMouseUp);
+  container.addEventListener('click', handleContainerClick);
 }
 
 /*************************************************
@@ -608,12 +603,12 @@ async function saveMovie(movie, ratings) {
     watched_at: new Date().toISOString(),
     ratings,
     average_rating,
-    // tmdb_rating: movie.vote_average.toFixed(),
     review: 'Filmaço hein!',
     created_at: new Date(),
     updated_at: new Date()
   });
 
-  alert(`🎬 O filme "${movie.title}" foi salvo com média: ${average_rating}!`); //mudar para toast notification
+  //mudar para toast notification
+  alert(`🎬 O filme "${movie.title}" foi salvo com média: ${average_rating}!`); 
 }
 
