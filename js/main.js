@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
 
-import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+import { getFirestore, collection, doc,  addDoc, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBpSXsr8ZC_BmCnaySCp42NexSrTFTzHtg",
@@ -16,7 +16,12 @@ const db = getFirestore(app);
 
 // Obtém os filmes salvos no Firestore
 const snapshotMovies = await getDocs(collection(db, 'movies'));
-const watchedMovies = snapshotMovies.docs.map(doc => doc.data());
+const watchedMovies = snapshotMovies.docs.map(doc => ({
+  docId: doc.id,
+  ...doc.data(),
+}));
+
+
 watchedMovies.sort((a, b) => b.average_rating - a.average_rating);
 const watchedMoviesIds = watchedMovies.map(movie => movie.id);
 
@@ -354,7 +359,7 @@ function createMovieActionButtons(movie){
     div.querySelector('#rate-movie-btn').addEventListener('click', () => openRatingModal(movie));
   } else {
     div.innerHTML = `
-      <button class="py-2 px-3 rounded-lg hover:bg-gray-100 flex justify-center items-center gap-2">
+      <button id="delete-watched-movie" class="py-2 px-3 rounded-lg hover:bg-gray-100 flex justify-center items-center gap-2">
         <svg class="w-4 h-4 text-gray-500" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke="currentColor">
           <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
         </svg>
@@ -367,7 +372,12 @@ function createMovieActionButtons(movie){
         </svg>
         <span class="font-medium">Editar avaliação</span>
       </button>
-    `
+    `;
+
+    div.querySelector('#delete-watched-movie').addEventListener('click', async () => {
+      await deleteWatchedMovie(movie.docId);
+      location.reload();
+    });
   }
 
   return div;
@@ -397,6 +407,24 @@ function openRatingModal(movie) {
     movieSubtitle.innerHTML = capitalize(reviewer) + ' que nota você da para esse filme?'
 
     movieFooter.innerHTML = createStepHTML(reviewer);
+
+    const nextBtn = movieFooter.querySelector('#next-btn');
+  
+    nextBtn.addEventListener('click', () => {
+      const input = document.querySelector("#rating-input");
+      const value = parseFloat(input.value);
+
+      if (isNaN(value) || value < 0 || value > 10) {
+        alert("Por favor, digite uma nota válida de 0 a 10.");
+        return;
+      }
+
+      ratings[reviewers[currentReviewerIndex]] = value;
+      currentReviewerIndex++;
+
+      currentReviewerIndex < reviewers.length ? renderStep() : renderSummary();
+    });
+
     initializeSlider();
   }
 
@@ -428,7 +456,7 @@ function openRatingModal(movie) {
           </svg>
           <span class="text-gray-500 font-medium">Cancelar</span>
         </button>
-        <button id="save-btn" class="w-full py-2 px-3 rounded-lg text-white bg-[#0088FF] hover:bg-blue-600 flex justify-center items-center gap-2">
+        <button id="save-btn" class="w-full py-2 px-3 rounded-lg text-white bg-[#0088FF] hover:bg-blue-600 disabled:opacity-50 flex justify-center items-center gap-2">
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/>
             <path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"/><path d="M7 3v4a1 1 0 0 0 1 1h7"/>
@@ -437,11 +465,14 @@ function openRatingModal(movie) {
         </button>
       </div>
     `;
+    
+    const saveBtn = document.querySelector('#save-btn')
 
-    document.querySelector('#save-btn').addEventListener('click', async () => {
+    saveBtn.addEventListener('click', async () => {
+      saveBtn.disabled = true; 
+
       try {
-        await saveMovie(movie, ratings);
-        document.querySelector('#movie-modal').remove();
+        await saveWatchedMovie(movie, ratings);
         location.reload();
       } catch (error) {
         console.error("Erro ao salvar o filme:", error);
@@ -453,23 +484,6 @@ function openRatingModal(movie) {
       document.body.style.overflow = 'auto';
     });
   }
-
-  movieFooter.addEventListener('click', e => {
-    if (e.target.id === 'next-btn') {
-      const input = document.querySelector("#rating-input");
-      const value = parseFloat(input.value);
-
-      if (isNaN(value) || value < 0 || value > 10) {
-        alert("Por favor, digite uma nota válida de 0 a 10.");
-        return;
-      }
-
-      ratings[reviewers[currentReviewerIndex]] = value;
-      currentReviewerIndex++;
-
-      currentReviewerIndex < reviewers.length ? renderStep() : renderSummary();
-    }
-  });
 }
 
 function createStepHTML(reviewer) {
@@ -588,7 +602,7 @@ function formatRuntime(minutes) {
  * 💾 SALVAR FILME NO FIRESTORE
  *************************************************/
 
-async function saveMovie(movie, ratings) {
+async function saveWatchedMovie(movie, ratings) {
   if (isAlreadyWatched(movie.id)) return;
 
   const ratingValues = Object.values(ratings);
@@ -612,3 +626,10 @@ async function saveMovie(movie, ratings) {
   alert(`🎬 O filme "${movie.title}" foi salvo com média: ${average_rating}!`); 
 }
 
+async function deleteWatchedMovie(id) {
+  try {
+    await deleteDoc(doc(db, "movies", id));
+  } catch (err) {
+    console.log(err);
+  }
+}
