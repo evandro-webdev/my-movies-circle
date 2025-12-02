@@ -157,29 +157,8 @@ function showMovies(moviesList, tab) {
     const posterPath = movie.poster_path ? BASE_IMAGE_URL + movie.poster_path : '';
     const averageRating = tab === 'discoverList' || tab === 'savedList' ? movie.vote_average.toFixed(1) : movie.average_rating;
 
-    movieCard.innerHTML = `
-      <div class="space-y-1 overflow-hidden cursor-pointer flex flex-col">
-        <div class="relative w-[185px] max-w-full aspect-[185/280] rounded-lg overflow-hidden">
-          <img 
-            src="${posterPath}" 
-            alt="${movie.title}" 
-            class="w-full h-full object-cover transition-transform duration-500 ease-out hover:scale-110"
-            onerror="this.src='../img/placeholder.jpg';"
-          >
-          <div class="absolute top-2 right-2 p-[6px] rounded-md text-xs font-medium text-white bg-gradient-to-t from-[#194476] to-[#215DA2] flex items-center gap-1">
-            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="white" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-star-icon lucide-star">
-              <path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/>
-            </svg>
-            <span class="text-[10px] font-medium">${averageRating}</span>
-          </div>
-        </div>
-        <div class="h-[10%]">
-          <h3 class="text-sm font-semibold text-gray-700 line-clamp-1">${movie.title}</h3>
-        </div>
-      </div>
-    `;
+    movieCard.innerHTML = createMovieCardHtml(movie, posterPath, averageRating);
 
-    // Define o comportamento do clique dependendo da aba
     movieCard.addEventListener('click', async () => {
       const movieData = tab === 'watchedList' ? movie : await getMovie(movie.id);
 
@@ -190,6 +169,31 @@ function showMovies(moviesList, tab) {
   });
 }
 
+function createMovieCardHtml(movie, posterPath, averageRating){
+  return `
+    <div class="space-y-1 overflow-hidden cursor-pointer flex flex-col">
+      <div class="relative w-[185px] max-w-full aspect-[185/280] rounded-lg overflow-hidden">
+        <div class="skeleton absolute inset-0 bg-gray-300 animate-pulse"></div>
+        <img 
+          src="${posterPath}" 
+          alt="${movie.title}"
+          class="poster w-full h-full object-cover opacity-0 transition-opacity duration-300"
+          onload="this.classList.add('opacity-100'); this.previousElementSibling.remove();"
+          onerror="this.src='../img/placeholder.jpg'; this.classList.add('opacity-100'); this.previousElementSibling.remove();"
+        >
+        <div class="absolute top-2 right-2 p-[6px] rounded-md text-xs font-medium text-white bg-gradient-to-t from-[#194476] to-[#215DA2] flex items-center gap-1">
+          <svg class="w-[10px] h-[10px]" viewBox="0 0 24 24" fill="white" stroke="currentColor" stroke-width="1">
+            <path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/>
+          </svg>
+          <span class="text-[10px] font-medium">${averageRating}</span>
+        </div>
+      </div>
+      <div class="h-[10%]">
+        <h3 class="text-sm font-semibold text-gray-700 line-clamp-1">${movie.title}</h3>
+      </div>
+    </div>
+  `
+}
 
 /*************************************************
  * 🎥 BUSCAR DETALHES E ABRIR MODAL DO FILME
@@ -212,12 +216,44 @@ async function getMovie(movieId) {
 
 function openMovieModal(movie) {
   document.body.style.overflow = 'hidden';
-  
-  const movieModal = createModalWrapper();
-  movieModal.appendChild(createMoviePoster(movie));
-  movieModal.appendChild(createMovieInfo(movie));
 
-  document.body.appendChild(movieModal);
+  const overlay = document.createElement('div');
+  overlay.id = "movie-modal";
+  overlay.className = `
+    fixed inset-0 z-50 
+    bg-black/20 backdrop-blur-sm
+    flex justify-center items-end
+  `;
+
+  const panel = document.createElement('div');
+  panel.id = 'modal-panel';
+  panel.className = `
+    w-full h-[100%] bg-white rounded-t-2xl overflow-y-auto
+    transform translate-y-full transition-transform duration-300
+  `;
+  
+  // const movieModal = createModalWrapper();
+  panel.appendChild(createMoviePoster(movie));
+  panel.appendChild(createMovieInfo(movie));
+
+  overlay.appendChild(panel);
+  document.body.appendChild(overlay);
+
+  requestAnimationFrame(() => {
+    panel.classList.remove("translate-y-full");
+  })
+}
+
+function closeMovieModal(){
+  const modal = document.querySelector('#movie-modal');
+  const panel = document.querySelector('#modal-panel');
+
+  panel.classList.add('translate-y-full');
+
+  setTimeout(() => {
+    modal.remove();
+    document.body.style.overflow = 'auto';
+  }, 300);
 }
 
 function createModalWrapper(){
@@ -238,7 +274,7 @@ function createMoviePoster(movie){
     <img 
       src="${posterPath}" 
       alt="${movie.title}" 
-      class="w-full h-full object-cover hover:scale-110 transition-transform duration-500 ease-out"
+      class="w-full h-full object-cover"
     >
 
     <div class="absolute bottom-0 left-0 w-full h-1/4 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
@@ -260,8 +296,7 @@ function createMoviePoster(movie){
   `
 
   div.querySelector('#close-modal').addEventListener('click', (e) => {
-    document.querySelector('#movie-modal').remove();
-    document.body.style.overflow = 'auto';
+    closeMovieModal();
   })
   
   return div;
@@ -480,8 +515,7 @@ function openRatingModal(movie) {
     });
 
     document.querySelector('#cancel-btn').addEventListener('click', () => {
-      document.querySelector('#movie-modal').remove();
-      document.body.style.overflow = 'auto';
+      closeMovieModal();
     });
   }
 }
