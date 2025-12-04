@@ -192,13 +192,14 @@
     <footer class="w-full px-4 py-10 text-center">Footer</footer>
 
     <nav
+      id="navigation-bar"
       class="fixed bottom-4 p-1 inset-x-4 rounded-lg border border-gray-200 bg-white shadow-sm flex gap-2"
     >
       <button
+        data-tab="watched"
         class="py-[10px] px-[5px] text-[#0088FF] flex flex-1 justify-center items-center gap-2"
       >
         <svg
-          xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
           fill="currentColor"
           class="w-4 h-4"
@@ -214,16 +215,14 @@
       </button>
 
       <button
+        data-tab="discover"
         class="py-[10px] px-[5px] text-gray-400 flex flex-1 justify-center items-center gap-2"
       >
         <svg
-          xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
           stroke-width="1.75"
-          stroke-linecap="round"
-          stroke-linejoin="round"
           class="w-4 h-4"
         >
           <path
@@ -236,10 +235,10 @@
       </button>
 
       <button
+        data-tab="saved"
         class="py-[10px] px-[5px] text-gray-400 flex flex-1 justify-center items-center gap-2"
       >
         <svg
-          xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
           fill="currentColor"
           class="w-4 h-4"

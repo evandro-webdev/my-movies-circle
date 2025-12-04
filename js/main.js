@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
 
-import { getFirestore, collection, doc,  addDoc, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+import { getFirestore, collection, doc,  addDoc, setDoc, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBpSXsr8ZC_BmCnaySCp42NexSrTFTzHtg",
@@ -15,12 +15,11 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 // Obtém os filmes salvos no Firestore
-const snapshotMovies = await getDocs(collection(db, 'movies'));
+const snapshotMovies = await getDocs(collection(db, 'watchedMovies'));
 const watchedMovies = snapshotMovies.docs.map(doc => ({
   docId: doc.id,
   ...doc.data(),
 }));
-
 
 watchedMovies.sort((a, b) => b.average_rating - a.average_rating);
 const watchedMoviesIds = watchedMovies.map(movie => movie.id);
@@ -42,6 +41,32 @@ const options = {
     Authorization: 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI0YjkwZTEzYWY1MDgyNWNlMDI2M2ZjOWQxOTdjOWU4YSIsIm5iZiI6MTYyOTkzNzQzOS45MTM5OTk4LCJzdWIiOiI2MTI2ZGYxZmFhZjg5NzAwNDQ3ZjlhMzUiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.WdS9xgyX4eaResQBc18BQSZ3eIzZR6shPU6mZOh0GM8' // 🔒 Ideal: colocar isso em variável .env no backend
   }
 };
+
+
+let currentTab = 'watched';
+
+document.querySelectorAll('#navigation-bar button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tab = btn.dataset.tab;
+    if(tab === currentTab) return;
+
+    currentTab = tab;
+    updateTabUI();
+    loadTabContent(tab);
+  })
+})
+
+function updateTabUI(){
+  document.querySelectorAll('#navigation-bar button').forEach(btn => {
+    if(btn.dataset.tab === currentTab) {
+      btn.classList.remove("text-gray-400");
+      btn.classList.add("text-[#0088FF]");
+    } else {
+      btn.classList.add("text-gray-400");
+      btn.classList.remove("text-[#0088FF]");
+    }
+  })
+}
 
 
 /*************************************************
@@ -217,22 +242,9 @@ async function getMovie(movieId) {
 function openMovieModal(movie) {
   document.body.style.overflow = 'hidden';
 
-  const overlay = document.createElement('div');
-  overlay.id = "movie-modal";
-  overlay.className = `
-    fixed inset-0 z-50 
-    bg-black/20 backdrop-blur-sm
-    flex justify-center items-end
-  `;
-
-  const panel = document.createElement('div');
-  panel.id = 'modal-panel';
-  panel.className = `
-    w-full h-[100%] bg-white rounded-t-2xl overflow-y-auto
-    transform translate-y-full transition-transform duration-300
-  `;
+  const overlay = createPanelOverlay();
+  const panel = createMoviePanel();
   
-  // const movieModal = createModalWrapper();
   panel.appendChild(createMoviePoster(movie));
   panel.appendChild(createMovieInfo(movie));
 
@@ -240,11 +252,14 @@ function openMovieModal(movie) {
   document.body.appendChild(overlay);
 
   requestAnimationFrame(() => {
-    panel.classList.remove("translate-y-full");
-  })
+    requestAnimationFrame(() => {
+      panel.classList.remove("translate-y-full");
+    });
+  });
+
 }
 
-function closeMovieModal(){
+function closeMoviePanel(){
   const modal = document.querySelector('#movie-modal');
   const panel = document.querySelector('#modal-panel');
 
@@ -256,26 +271,46 @@ function closeMovieModal(){
   }, 300);
 }
 
-function createModalWrapper(){
-  const movieModal = document.createElement("div");
-  movieModal.className = "fixed top-0 z-50 w-full h-full bg-white overflow-y-auto";
-  movieModal.id = "movie-modal";
+function createPanelOverlay(){
+  const overlay = document.createElement('div');
+  overlay.id = "movie-modal";
+  overlay.className = `
+    fixed inset-0 z-50 
+    bg-black/20 backdrop-blur-sm
+    flex justify-center items-end
+  `;
 
-  return movieModal;
+  return overlay;
+}
+
+function createMoviePanel(){
+  const panel = document.createElement('div');
+  panel.id = 'modal-panel';
+  panel.className = `
+    w-full h-[100%] bg-white rounded-t-2xl overflow-y-auto
+    transform translate-y-full transition-transform duration-300
+  `;
+
+  return panel;
 }
 
 function createMoviePoster(movie){
   const posterPath = movie.poster_path ? BASE_IMAGE_URL + movie.poster_path : '';
 
   const div = document.createElement("div");
-  div.className = "relative w-full overflow-hidden";
+  div.className = "relative w-full overflow-hidden"; 
 
   div.innerHTML = `
-    <img 
-      src="${posterPath}" 
-      alt="${movie.title}" 
-      class="w-full h-full object-cover"
-    >
+    <div>
+      <div class="skeleton absolute inset-0 bg-gray-300 animate-pulse"></div>
+      <img 
+        src="${posterPath}" 
+        alt="${movie.title}"
+        class="poster w-full h-full object-cover opacity-0 transition-opacity duration-300"
+        onload="this.classList.add('opacity-100'); this.previousElementSibling.remove();"
+        onerror="this.src='../img/placeholder.jpg'; this.classList.add('opacity-100'); this.previousElementSibling.remove();"
+      >
+    </div>
 
     <div class="absolute bottom-0 left-0 w-full h-1/4 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
     <div class="fixed top-0 left-0 w-full h-1/5 bg-gradient-to-b from-black to-transparent pointer-events-none"></div>
@@ -296,7 +331,7 @@ function createMoviePoster(movie){
   `
 
   div.querySelector('#close-modal').addEventListener('click', (e) => {
-    closeMovieModal();
+    closeMoviePanel();
   })
   
   return div;
@@ -376,7 +411,7 @@ function createMovieActionButtons(movie){
 
   if (!isAlreadyWatched(movie.id)) {
     div.innerHTML = `
-      <button class="py-2 px-3 rounded-lg hover:bg-gray-100 flex justify-center items-center gap-2">
+      <button id="save-movie" class="py-2 px-3 rounded-lg hover:bg-gray-100 flex justify-center items-center gap-2">
         <svg class="w-4 h-4 text-gray-500" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke="currentColor">
           <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/>
         </svg>
@@ -390,7 +425,14 @@ function createMovieActionButtons(movie){
         <span class="font-medium">Marcar como assistido</span>
       </button>
     `
-    
+
+    div.querySelector('#save-movie').addEventListener('click', async () => {
+      try {
+        await saveToWatchMovie(movie.id);
+      } catch (error) {
+        console.error("Erro ao salvar o filme:", error);
+      }
+    })
     div.querySelector('#rate-movie-btn').addEventListener('click', () => openRatingModal(movie));
   } else {
     div.innerHTML = `
@@ -515,7 +557,7 @@ function openRatingModal(movie) {
     });
 
     document.querySelector('#cancel-btn').addEventListener('click', () => {
-      closeMovieModal();
+      closeMoviePanel();
     });
   }
 }
@@ -644,7 +686,7 @@ async function saveWatchedMovie(movie, ratings) {
     (ratingValues.reduce((a, b) => a + b, 0) / ratingValues.length).toFixed(1)
   );
 
-  await addDoc(collection(db, "movies"), {
+  await addDoc(collection(db, "watchedMovies"), {
     id: movie.id,
     title: movie.title,
     original_title: movie.original_title,
@@ -662,8 +704,14 @@ async function saveWatchedMovie(movie, ratings) {
 
 async function deleteWatchedMovie(id) {
   try {
-    await deleteDoc(doc(db, "movies", id));
+    await deleteDoc(doc(db, "watchedMovies", id));
   } catch (err) {
     console.log(err);
   }
+}
+
+async function saveToWatchMovie(id){
+  await addDoc(collection(db, "savedMovies"), {
+    id: id
+  });
 }
