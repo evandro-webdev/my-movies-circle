@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
 
-import { getFirestore, collection, doc,  addDoc, setDoc, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+import { getFirestore, collection, doc,  addDoc, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBpSXsr8ZC_BmCnaySCp42NexSrTFTzHtg",
@@ -14,15 +14,45 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Obtém os filmes salvos no Firestore
-const snapshotMovies = await getDocs(collection(db, 'watchedMovies'));
-const watchedMovies = snapshotMovies.docs.map(doc => ({
-  docId: doc.id,
-  ...doc.data(),
-}));
+let watchedMovies = [];
+let watchedMoviesIds = [];
+let watchedMoviesDetailed = [];
 
-watchedMovies.sort((a, b) => b.average_rating - a.average_rating);
-const watchedMoviesIds = watchedMovies.map(movie => movie.id);
+async function loadWatchedMovies(){
+  const snapshot = await getDocs(collection(db, 'watchedMovies'));
+
+  watchedMovies = snapshot.docs.map(doc => ({
+    docId: doc.id,
+    ...doc.data(),
+  }));
+
+  watchedMoviesIds = watchedMovies.map(movie => movie.id);
+}
+
+
+async function loadWatchedMoviesInfo(){ 
+  await loadWatchedMovies();
+
+  watchedMoviesDetailed = await Promise.all(
+    watchedMovies.map(async movie => {
+      const dadosTMDB = await getSingleMovie(movie.id);
+      return { 
+        ...movie,
+        poster_path: dadosTMDB.poster_path,
+        genres: dadosTMDB.genres,
+        overview: dadosTMDB.overview,
+        tagline: dadosTMDB.tagline,
+        release_date: dadosTMDB.release_date,
+        runtime: dadosTMDB.runtime,
+        tmdb_rating: dadosTMDB.vote_average.toFixed(1)
+      };
+    })
+  )
+
+  watchedMoviesDetailed.sort((a, b) => b.average_rating - a.average_rating);
+
+  return watchedMoviesDetailed;
+};
 
 
 /*************************************************
@@ -89,23 +119,7 @@ async function getSingleMovie(movieId) {
  * 🎬 COMPLETA OS DADOS DOS FILMES JÁ ASSISTIDOS
  *************************************************/
 
-async function loadWatchedMoviesInfo(){ 
-  return await Promise.all(
-    watchedMovies.map(async movie => {
-      const dadosTMDB = await getSingleMovie(movie.id);
-      return { 
-        ...movie,
-        poster_path: dadosTMDB.poster_path,
-        genres: dadosTMDB.genres,
-        overview: dadosTMDB.overview,
-        tagline: dadosTMDB.tagline,
-        release_date: dadosTMDB.release_date,
-        runtime: dadosTMDB.runtime,
-        tmdb_rating: dadosTMDB.vote_average.toFixed(1)
-      };
-    })
-  )
-};
+
 
 
 /*************************************************
