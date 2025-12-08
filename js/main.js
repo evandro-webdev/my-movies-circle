@@ -1,6 +1,13 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
 
-import { getFirestore, collection, doc,  addDoc, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+import { 
+  getFirestore, 
+  collection, 
+  doc,  
+  addDoc, 
+  getDocs, 
+  deleteDoc 
+} from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBpSXsr8ZC_BmCnaySCp42NexSrTFTzHtg",
@@ -54,6 +61,46 @@ async function loadWatchedMoviesInfo(){
   return watchedMoviesDetailed;
 };
 
+let savedMovies = [];
+let savedMoviesIds = [];
+let savedMoviesDetailed = [];
+
+async function loadSavedMovies(){
+  const snapshot = await getDocs(collection(db, 'savedMovies'));
+
+  savedMovies = snapshot.docs.map(doc => ({
+    docId: doc.id,
+    ...doc.data(),
+  }));
+
+  savedMoviesIds = savedMovies.map(movie => movie.id);
+}
+
+
+async function loadSavedMoviesInfo(){ 
+  await loadSavedMovies();
+
+  savedMoviesDetailed = await Promise.all(
+    savedMovies.map(async movie => {
+      const dadosTMDB = await getSingleMovie(movie.id);
+      return { 
+        ...movie,
+        poster_path: dadosTMDB.poster_path,
+        genres: dadosTMDB.genres,
+        overview: dadosTMDB.overview,
+        tagline: dadosTMDB.tagline,
+        release_date: dadosTMDB.release_date,
+        runtime: dadosTMDB.runtime,
+        tmdb_rating: dadosTMDB.vote_average.toFixed(1)
+      };
+    })
+  )
+
+  savedMoviesDetailed.sort((a, b) => b.average_rating - a.average_rating);
+
+  return savedMoviesDetailed;
+};
+
 
 /*************************************************
  * 🌐 TMDB CONFIGURAÇÃO DE API
@@ -72,17 +119,16 @@ const options = {
   }
 };
 
-
 let currentTab = 'watched';
 
 document.querySelectorAll('#navigation-bar button').forEach(btn => {
-  btn.addEventListener('click', () => {
+  btn.addEventListener('click', async () => {
     const tab = btn.dataset.tab;
     if(tab === currentTab) return;
 
     currentTab = tab;
     updateTabUI();
-    loadTabContent(tab);
+    await loadTabContent(currentTab);
   })
 })
 
@@ -96,6 +142,18 @@ function updateTabUI(){
       btn.classList.remove("text-[#0088FF]");
     }
   })
+}
+
+async function loadTabContent(currentTab){
+  if(currentTab === 'watched'){
+    console.log('watched')
+    showMovies(watchedMoviesDetailed);
+  }else if(currentTab === 'saved'){
+    console.log('saved')
+
+    savedMovies = await loadSavedMoviesInfo();
+    showMovies(savedMovies);
+  }
 }
 
 
@@ -214,7 +272,7 @@ function createMovieCardHtml(movie, posterPath, averageRating){
       <div class="relative w-[185px] max-w-full aspect-[185/280] rounded-lg overflow-hidden">
         <div class="skeleton absolute inset-0 bg-gray-300 animate-pulse"></div>
         <img 
-          src="${posterPath}" 
+          src="ssda" 
           alt="${movie.title}"
           class="poster w-full h-full object-cover opacity-0 transition-opacity duration-300"
           onload="this.classList.add('opacity-100'); this.previousElementSibling.remove();"
