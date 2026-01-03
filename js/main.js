@@ -272,7 +272,7 @@ function createMovieCardHtml(movie, posterPath, averageRating){
       <div class="relative w-[185px] max-w-full aspect-[185/280] rounded-lg overflow-hidden">
         <div class="skeleton absolute inset-0 bg-gray-300 animate-pulse"></div>
         <img 
-          src="ssda" 
+          src="${posterPath}" 
           alt="${movie.title}"
           class="poster w-full h-full object-cover opacity-0 transition-opacity duration-300"
           onload="this.classList.add('opacity-100'); this.previousElementSibling.remove();"
